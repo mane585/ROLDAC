@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Robot Acuático</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <style>
+   * { box-sizing: border-box; touch-action: none; }
+    body { margin: 0; background: black; overflow: hidden; font-family: sans-serif; }
+
+    #contenedor {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      z-index: 0;
+    }
+
+    .joystick {
+      position: absolute;
+      width: 140px !important;
+      height: 140px !important;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-content: center;
+      gap: 8px;
+      padding: 8px;
+    }
+
+    .joystick button {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      background: rgba(43, 255, 0, 0.8);
+      border: 2px solid white;
+      border-radius: 8px;
+      color: white;
+      user-select: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .joystick button:hover {
+      background: rgba(60, 255, 60, 1);
+    }
+
+    .slider-container {
+      position: absolute;
+      left: 1%;
+      bottom: -8%;
+      width: fit-content;
+      height: fit-content;
+      z-index: 10;
+      display: flex;
+      flex-direction: row;
+    }
+
+    .slider-vertical {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12rem;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      transform-origin: left top;
+      z-index: 999;
+    }
+    #slider-prof{
+      position: absolute;
+      bottom: 200px;
+      left: 45px;
+      transform: rotate(90deg);
+    }
+    #slider-vel{
+      position: absolute;
+      transform: rotate(270deg);
+      bottom: 8px;
+      left: 55px;
+    }
+    #slider-vel::-webkit-slider-thumb{
+      background: rgba(43, 255, 0, 0.8);
+
+    }
+    #slider-prof::-webkit-slider-thumb{
+      background: rgba(0, 255, 255, 0.8);
+    }
+    .vel-txt, .prof-txt{
+      transform: rotate(270deg);
+      position: absolute;
+      bottom: 120px;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      z-index: 1;
+    }
+    .vel-txt{
+      left: 43px;
+    }
+    .prof-txt{
+      left: -17px;
+    }
+    .slider-vertical::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 30px;
+      height: 30px;
+      border: 2px solid white;
+      border-radius: 50%;
+      cursor: pointer;
+      
+    }
+
+    .slider-vertical::-moz-range-thumb {
+      width: 30px;
+      height: 30px;
+      background: rgba(0, 255, 255, 0.8);
+      border: 2px solid white;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    #joystick-dir {
+      right: 3%;
+      bottom: 5%;
+      position: absolute;
+      z-index: 10;
+      background: transparent;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-content: center;
+      gap: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+    .dir-central{
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+    }
+    #btn-center{
+      margin: 0 10px;
+    }
+    #fullscreen-btn,
+    #exit-fullscreen-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 20;
+      background: rgba(0,0,0,0.5);
+      border: none;
+      color: white;
+      font-size: 28px;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #exit-fullscreen-btn { right: 10px; display: none; }
+
+    #debug-panel {
+      background: rgba(0, 0, 0, 0.212);
+      color: white;
+      padding: 10px;
+      z-index: 100;
+      border-radius: 5px;
+      font-size: 10px;
+      max-width: 300px;
+      line-height: 1.2;
+      margin-bottom: 5px;
+      width: 165px;
+    }
+
+    #debug-panel h3 {
+      margin: 0 0 4px;
+      color: cyan;
+      font-size: 12px;
+    }
+
+    #detection-status { color: lime; font-weight: bold; font-size: 10px; }
+    #detection-status.off { color: red; }
+    #radar-status, #fps-counter { font-size: 11px; }
+
+    #radar-canvas {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 250px;
+      height: 150px;
+      background: black;
+      border: 2px solid cyan;
+      z-index: 50;
+      font-size: 10px !important;
+    }
+
+    #detection-toggle, #radar-toggle, #fullscreen-btn,
+    #exit-fullscreen-btn, #close-radar-btn {
+      font-size: 10px;
+      padding: 6px 8px;
+    }
+
+    #detection-toggle {
+      z-index: 20;
+      padding: 10px;
+      background: rgba(0, 255, 0, 0.26);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      width: 90px;
+      height: fit-content;
+      margin-bottom: 10px;
+      font-size: 10px ;
+    }
+
+    #radar-toggle {
+      z-index: 20;
+      padding: 10px;
+      background: rgba(0,200,255,0.26);
+      border: none;
+      border-radius: 8px;
+      color: rgb(255, 255, 255);
+      width: 68px;
+      height: fit-content;
+      font-size: 10px ;
+      margin-left: 5px;
+    }
+    .toggle-container{
+      display: flex;
+      flex-direction: row;
+      margin-top: 10px;
+    }
+    .control-container {
+      display: flex;
+      flex-direction: column;
+      margin-left: 220px;
+      font-size: 12px;
+      z-index: 999;
+    }
+
+    #radar-canvas.enlarged {
+      width: 50%;
+      height: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+    }
+
+    #close-radar-btn {
+      position: absolute;
+      top: 20%;
+      left: 75%;
+      z-index: 101;
+      background: rgba(255,0,0,0.7);
+      border: none;
+      color: white;
+      font-size: 20px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+    }
+
+    #close-radar-btn.visible { display: block; }
+
+    @media (max-width: 950px) {
+      #radar-canvas { width: 25%; height: 30%; }
+      .control-container { margin-left: 28% !important; }
+    }
+    #velocidad-label, #Profundidad-label {
+      
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+    }
+body{
+    margin: 0;
+  background:  url('/templates/img/fondo.png') center center no-repeat;
+  background-size: cover;
+  overflow: hidden;
+  font-family: sans-serif;
+}
+.info-container{
+  position:absolute;
+  right: 40px;
+  top: 10px;
+  width: fit-content;
+  color: white;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.212);
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 10px;
+}
+.txt-sensor{
+  margin: 3px 0;
+}
+h3{
+  margin-top: 0;
+  color: rgb(31, 248, 255);
+}
+.color-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-left: 8px;
+    vertical-align: middle;
+    background-color: gray; /* color por defecto */
+}
+#btn-norm{
+  position: absolute;
+  right: 450%;
+  bottom: 50%;
+}
+.roldac-txt{
+  color: white;
+  font-size: 9px;
+  position: absolute;
+  left: calc(12.5% - 10px);
+  top: 32%;
+}
+  </style>
+</head>
+<body>
+  <div id="contenedor">
+    <img id="video" src="{{ url_for('video_feed', detection=True) }}" alt="Video detección">
+
+    <button id="fullscreen-btn" title="Pantalla completa">⛶</button>
+    <button id="exit-fullscreen-btn" title="Salir pantalla completa">⤬</button>
+
+    <div class="control-container">
+      <div class="toggle-container">
+        <button id="detection-toggle">Detección: ON</button>
+        <button id="radar-toggle" >Radar: ON</button>
+      </div>
+      <div id="debug-panel">
+        <!--<h3>Estado del Sistema</h3>-->
+        <div><b>Modo detección: </b><span id="detection-status">ACTIVADO</span></div>
+        <!--<div><b>FPS: </b><span id="fps-counter">0</span></div>!-->
+        <div><b>Radar: </b><span id="radar-status">Conectando...</span></div>
+        <div id="velocidad-label">Velocidad: 0%</div>
+        <div id="Profundidad-label">Profundidad: 0%</div>
+      </div>
+
+      <canvas id="radar-canvas"></canvas>
+      <p class="roldac-txt">Roldac v1</p>
+      <button id="close-radar-btn" title="Cerrar radar">✕</button>
+
+     
+    </div>
+
+    <div class="info-container">
+      <h3>Info. del agua</h3> 
+      <p class="txt-sensor"><b>Temperatura: </b><span id="sensor-temperatura">0</span> °C
+        <span id="color-temp" class="color-dot"></span>
+      </p>
+      <p class="txt-sensor"><b>pH: </b><span id="sensor-pH">0</span>
+        <span id="color-ph" class="color-dot"></span>
+      </p>
+      <p class="txt-sensor"><b>Turbidez: </b><span id="sensor-turbidez">0</span> NTU
+        <span id="color-turb" class="color-dot"></span>
+      </p>
+      <p class="txt-sensor"><b>Total de sólidos: <br style="margin-top: 5px;"> disueltos: </b><span id="sensor-tds">0</span> PPM
+        <span id="color-tds" class="color-dot"></span>
+      </p>
+    </div>
+
+    <div class="slider-container">
+      <div>
+        <input
+          type="range"
+          class="slider-vertical"
+          id="slider-vel"
+          min="0"
+          max="100"
+          value="0"
+          orient="vertical"
+        />
+        <p class="vel-txt">Velocidad</p>
+      </div>
+
+      <div>
+        <input
+          type="range"
+          class="slider-vertical"
+          id="slider-prof"
+          min="0"
+          max="100"
+          value="0"
+          orient="vertical"
+        />
+        <p class="prof-txt">Profundidad</p>
+      </div>
+    </div>
+    
+    <div id="joystick-dir" class="joystick">
+      <button id="btn-forward">▲</button>
+      <div class="dir-central">
+        <button id="btn-left">◀</button>
+        <button id="btn-center">△</button>
+        <button id="btn-right">▶</button>
+      </div>
+      <button id="btn-norm">⬤</button>
+      <button id="btn-backward">▼</button>
+    </div>
+  </div>
+
+  <script>
+    const videoElement = document.getElementById('video');
+
+    videoElement.onerror = function() {
+      console.warn("No se pudo cargar el video, mostrando fondo");
+      videoElement.style.display = 'none';
+    };
+
+    const toggleBtn = document.getElementById("detection-toggle");
+    const detectionStatus = document.getElementById("detection-status");
+    const radarToggle = document.getElementById("radar-toggle");
+    const radarStatus = document.getElementById("radar-status");
+    const fullscreenBtn = document.getElementById("fullscreen-btn");
+    const exitFullscreenBtn = document.getElementById("exit-fullscreen-btn");
+    const velocidadLabel = document.getElementById("velocidad-label");
+    const sliderProf = document.getElementById("slider-prof");
+    const profundidadLabel = document.getElementById("Profundidad-label");
+
+    sliderProf.addEventListener("input", (e) => {
+      const valorProfundidad = parseInt(e.target.value);
+      profundidadLabel.textContent = `Profundidad: ${valorProfundidad}%`;
+      enviarProfundidad(valorProfundidad);
+    });
+
+    fullscreenBtn.addEventListener("click", () => {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) elem.requestFullscreen();
+      fullscreenBtn.style.display = "none";
+      exitFullscreenBtn.style.display = "inline";
+    });
+
+    exitFullscreenBtn.addEventListener("click", () => {
+      if (document.exitFullscreen) document.exitFullscreen();
+      exitFullscreenBtn.style.display = "none";
+      fullscreenBtn.style.display = "inline";
+    });
+
+    toggleBtn.addEventListener("click", () => {
+      fetch('/toggle_detection', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          toggleBtn.textContent = data.detection ? "Detección: ON" : "Detección: OFF";
+          toggleBtn.style.background = data.detection ? "rgba(0,255,0,0.5)" : "rgba(255,0,0,0.5)";
+          detectionStatus.textContent = data.detection ? "ACTIVADO" : "DESACTIVADO";
+          detectionStatus.className = data.detection ? "" : "off";
+        });
+    });
+
+    radarToggle.addEventListener("click", () => {
+      const action = radarToggle.textContent.includes("ON") ? "stop" : "start";
+      fetch(`/${action}_radar`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          radarToggle.textContent = action === "stop" ? "Radar: OFF" : "Radar: ON";
+          radarToggle.style.background = action === "stop" ? "rgba(255,100,0,0.5)" : "rgba(0,200,255,0.5)";
+          radarStatus.textContent = data.status || "Conectado";
+        });
+    });
+
+    const sliderVel = document.getElementById("slider-vel");
+    const joystickDir = document.getElementById("joystick-dir");
+    const debugPanel = document.getElementById("debug-panel");
+    const fpsCounterEl = document.getElementById("fps-counter");
+    const canvas = document.getElementById("radar-canvas");
+    const ctx = canvas.getContext("2d");
+    const closeRadarBtn = document.getElementById("close-radar-btn");
+
+    const btnLeft = document.getElementById("btn-left");
+    const btnRight = document.getElementById("btn-right");
+    const btnForward = document.getElementById("btn-forward");
+    const btnBackward = document.getElementById("btn-backward");
+    const btnCenter = document.getElementById("btn-center");
+    const btnNorm = document.getElementById("btn-norm");
+
+    // Variables globales de control
+    let velocidad = 0;
+    let direccion = 50; // 0 a 100, 50 centro
+    let enviando = false;
+
+    // Enviar velocidad y dirección al backend
+    function enviarDatos() {
+      if (enviando) return;
+      enviando = true;
+      fetch("/update_leds", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ velocidad, direccion })
+      }).then(() => { enviando = false; });
+    }
+
+    // Enviar profundidad para inmersión (servo + bomba)
+    function enviarProfundidad(valor) {
+  fetch("/update_profundidad", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ porcentaje: valor }) // Cambiado a 'porcentaje'
+  }).catch(console.error);
+}
+//enviar posicion servos de posicion
+function enviarServoDireccion(cmd) {
+  fetch("/update_servo_dir", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cmd }) // Cambiado a 'cmd'
+  }).catch(console.error);
+}
+
+
+    sliderVel.addEventListener("input", (e) => {
+      velocidad = Math.max(parseInt(e.target.value), 0);
+      velocidadLabel.textContent = `Velocidad: ${velocidad}%`;
+      enviarDatos();
+    });
+
+    // Manejo de joystick de dirección para servos y dirección general
+    btnNorm.addEventListener("click", () => {
+      direccion = 50; // normalizar
+      btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
+      btnRight.style.background = "rgba(43, 255, 0, 0.8)";
+      btnForward.style.background = "rgba(43, 255, 0, 0.8)";
+      btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
+      btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
+      enviarDatos();
+    });
+    btnLeft.addEventListener("click", () => {
+      direccion = 25; // izquierda
+      btnLeft.style.background = "rgba(33, 199, 0, 0.8)";
+      btnRight.style.background = "rgba(43, 255, 0, 0.8)";
+      btnForward.style.background = "rgba(43, 255, 0, 0.8)";
+      btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
+      btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
+      enviarDatos();
+    });
+
+    btnRight.addEventListener("click", () => {
+      direccion = 75; // derecha
+      btnRight.style.background = "rgba(33, 199, 0, 0.8)";
+      btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
+      btnForward.style.background = "rgba(43, 255, 0, 0.8)";
+      btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
+      btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
+      enviarDatos();
+    });
+
+    btnForward.addEventListener("click", () => {
+      direccion = 50; // adelante
+      velocidad = 0;
+      btnForward.style.background = "rgba(33, 199, 0, 0.8)";
+      btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
+      btnRight.style.background = "rgba(43, 255, 0, 0.8)";
+      btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
+      btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
+      enviarDatos();
+      // Para dirección vertical, enviar ángulo 0 (adelante)
+      enviarServoDireccion("frw");
+    });
+
+    btnBackward.addEventListener("click", () => {
+      direccion = 50; 
+      velocidad = 0;
+      btnBackward.style.background = "rgba(33, 199, 0, 0.8)";
+      btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
+      btnRight.style.background = "rgba(43, 255, 0, 0.8)";
+      btnForward.style.background = "rgba(43, 255, 0, 0.8)";
+      btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
+      enviarDatos();
+      // Enviar ángulo 180 para reversa vertical (servo)
+      enviarServoDireccion("bkw");
+    });
+
+    btnCenter.addEventListener("click", () => {
+      direccion = 50; // centro
+      velocidad = 0;
+      btnCenter.style.background = "rgba(33, 199, 0, 0.8)";
+      btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
+      btnRight.style.background = "rgba(43, 255, 0, 0.8)";
+      btnForward.style.background = "rgba(43, 255, 0, 0.8)";
+      btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
+      enviarDatos();
+      // Enviar ángulo 90 para posición neutra / subida lenta
+      enviarServoDireccion("up");
+    });
+
+    // Radar
+    canvas.width = 360;
+    canvas.height = 180;
+
+    const radarHistory = new Array(181).fill(0);
+
+    function drawRadar() {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height;
+      const radius = canvas.height;
+      const maxDistance = 200;
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = "lime";
+      for (let r = radius / 4; r <= radius; r += radius / 4) {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, r, Math.PI, 0);
+        ctx.stroke();
+      }
+
+      for (let angle = 0; angle <= 180; angle += 15) {
+        const rad = angle * Math.PI / 180;
+        const x = centerX + Math.cos(rad) * radius;
+        const y = centerY - Math.sin(rad) * radius;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+
+      for (let ang = 0; ang <= 180; ang++) {
+        const dist = radarHistory[ang];
+        if (dist > 0 && dist <= maxDistance) {
+          const rad = ang * Math.PI / 180;
+          const x = centerX + Math.cos(rad) * (dist / maxDistance) * radius;
+          const y = centerY - Math.sin(rad) * (dist / maxDistance) * radius;
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
+          ctx.lineTo(x, y);
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+
+      const currentAngle = radarHistory.lastAngle || 0;
+      const rad = currentAngle * Math.PI / 180;
+      const x = centerX + Math.cos(rad) * radius;
+      const y = centerY - Math.sin(rad) * radius;
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = "yellow";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const distActual = radarHistory[currentAngle] || 0;
+      ctx.fillStyle = "white";
+      ctx.font = "bold 12px Arial";
+      ctx.fillText(`Ángulo: ${currentAngle}°`, 10, 20);
+      ctx.fillText(`Distancia: ${distActual.toFixed(1)} cm`, 10, 35);
+    }
+
+    function actualizarRadar() {
+      fetch("/radar_data")
+        .then(res => res.json())
+        .then(data => {
+          const angle = data.angulo;
+          const distance = Math.min(data.distancia, 200);
+          radarHistory[angle] = distance;
+          radarHistory.lastAngle = angle;
+          drawRadar();
+        })
+        .catch(console.error);
+    }
+
+    setInterval(actualizarRadar, 100);
+
+    canvas.addEventListener("click", () => {
+      canvas.classList.add("enlarged");
+      closeRadarBtn.classList.add("visible");
+    });
+
+    closeRadarBtn.addEventListener("click", () => {
+      canvas.classList.remove("enlarged");
+      closeRadarBtn.classList.remove("visible");
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key.toLowerCase() === "d") {
+        debugPanel.style.display = debugPanel.style.display === "none" ? "block" : "none";
+      }
+    });
+
+    function updateDebugInfo() {
+      fetch("/debug_info")
+        .then((res) => res.json())
+        .then((data) => {
+          if (fpsCounterEl) fpsCounterEl.textContent = data.fps.toFixed(1);
+          if (radarStatus) radarStatus.textContent = data.radar_status;
+        })
+        .catch(console.error);
+    }
+
+    setInterval(updateDebugInfo, 1000);
+
+    // Actualizar datos sensores
+    function actualizarSensores() {
+      fetch("/sensor_data")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data) {
+            document.getElementById("sensor-temperatura").textContent = data.temp ?? "0";
+            document.getElementById("sensor-pH").textContent = data.ph ?? "0";
+            document.getElementById("sensor-turbidez").textContent = data.turb ?? "0";
+            document.getElementById("sensor-tds").textContent = data.tds ?? "0";
+
+            document.getElementById("color-temp").style.backgroundColor = data.temp_color || "gray";
+            document.getElementById("color-ph").style.backgroundColor = data.ph_color || "gray";
+            document.getElementById("color-turb").style.backgroundColor = data.turb_color || "gray";
+            document.getElementById("color-tds").style.backgroundColor = data.tds_color || "gray";
+          }
+        })
+        .catch(() => {});
+    }
+
+    setInterval(actualizarSensores, 500);
+  </script>
+</body>
+</html>
