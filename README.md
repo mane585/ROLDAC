@@ -28,10 +28,11 @@ El sistema se compone de los siguientes módulos:
 
 - **Interfaz Web**  
   - Stream de video en tiempo real con detección.  
-  - Joystick virtual para dirección.  
+  - Directional Pad virtual para dirección.  
   - Slider para velocidad.  
-  - Visualización del radar en canvas.  
-  - Panel de calidad de agua con indicadores.  
+  - Visualización del radar.  
+  - Panel de calidad de agua con indicadores.
+  - Control de inmersión.  
 
 ---
 
