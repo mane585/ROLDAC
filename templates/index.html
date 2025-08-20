@@ -37,7 +37,25 @@
       gap: 8px;
       padding: 8px;
     }
-
+    .dir-inmersion{
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 75px;
+      margin-left: 65px;
+    }
+    .dir-inmersion button{
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      background: rgba(43, 255, 0, 0.8);
+      border: 2px solid white;
+      border-radius: 8px;
+      color: white;
+      user-select: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
     .joystick button {
       width: 40px;
       height: 40px;
@@ -53,7 +71,25 @@
     .joystick button:hover {
       background: rgba(60, 255, 60, 1);
     }
-
+    .joystick button:disabled {
+      background: rgba(100, 100, 100, 0.5);
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    #btn-reconectar{
+      width: 30px;
+      height: 30px;
+      font-size: 20px;
+      background: rgba(255, 0, 0, 0.434);
+      border: 2px solid white;
+      border-radius: 8px;
+      color: white;
+      margin-left: 10px;
+      user-select: none;
+      cursor: pointer;
+      transition: background 0.3s;
+      z-index: 999;
+    }
     .slider-container {
       position: absolute;
       left: 1%;
@@ -76,25 +112,18 @@
       transform-origin: left top;
       z-index: 999;
     }
-    #slider-prof{
-      position: absolute;
-      bottom: 200px;
-      left: 45px;
-      transform: rotate(90deg);
-    }
+    
     #slider-vel{
       position: absolute;
       transform: rotate(270deg);
       bottom: 8px;
-      left: 55px;
+      left: 10px;
     }
     #slider-vel::-webkit-slider-thumb{
       background: rgba(43, 255, 0, 0.8);
 
     }
-    #slider-prof::-webkit-slider-thumb{
-      background: rgba(0, 255, 255, 0.8);
-    }
+    
     .vel-txt, .prof-txt{
       transform: rotate(270deg);
       position: absolute;
@@ -105,7 +134,7 @@
       z-index: 1;
     }
     .vel-txt{
-      left: 43px;
+      left: -2px;
     }
     .prof-txt{
       left: -17px;
@@ -278,6 +307,48 @@
       #radar-canvas { width: 25%; height: 30%; }
       .control-container { margin-left: 28% !important; }
     }
+    @media (min-width: 950px) {
+      #slider-vel{
+      bottom: 50px;
+      left: 30px;
+    }
+      .vel-txt{
+        left: 85px;
+        top: -50px;
+    }
+    .dir-inmersion{
+      margin-bottom: 120px;
+      margin-left: 85px;
+    }
+    .control-container {
+    margin-left: 270px;
+    flex-direction: column-reverse;
+    }
+    p,h3,b,button,div,span{
+      font-size: 15px !important;
+    }
+    #debug-panel {
+    margin-top: 10px;
+    width: fit-content;   
+    }
+    #detection-toggle {
+    width: 118px;   
+    }
+    #radar-toggle{
+      width: 95px;
+    }
+    .roldac-txt {
+    color: white;
+    font-size: 9px;
+    position: absolute;
+    left: 110px !important;
+    top: 23% !important;
+    }
+    #btn-norm{
+    right: 790px !important;
+    bottom: 65% !important;
+  }
+  }
     #velocidad-label, #Profundidad-label {
       
       color: white;
@@ -321,10 +392,15 @@ h3{
     vertical-align: middle;
     background-color: gray; /* color por defecto */
 }
-#btn-norm{
+
+#btn-axis{
   position: absolute;
-  right: 450%;
-  bottom: 50%;
+  right: 150px;
+  bottom: 48px;
+  background-color: rgb(1, 202, 202);
+}
+#btn-center-Axis{
+  margin: 0 10px;
 }
 .roldac-txt{
   color: white;
@@ -332,6 +408,29 @@ h3{
   position: absolute;
   left: calc(12.5% - 10px);
   top: 32%;
+}
+#btn-left-Axis {
+  background-color: rgb(1, 202, 202);
+}
+#btn-right-Axis{
+  background-color: rgb(1, 202, 202);
+}
+#btn-axis.giro-eje-select{
+  background-color: rgb(0, 144, 144);
+}
+
+.controles-block{
+  display: none;
+}
+#btn-norm{
+  position: absolute;
+  right: 440%;
+  bottom: 55%;
+  
+}
+.cooldown-active {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
   </style>
 </head>
@@ -346,6 +445,7 @@ h3{
       <div class="toggle-container">
         <button id="detection-toggle">Detección: ON</button>
         <button id="radar-toggle" >Radar: ON</button>
+        <button id="btn-reconectar">⥀</button>
       </div>
       <div id="debug-panel">
         <!--<h3>Estado del Sistema</h3>-->
@@ -353,7 +453,7 @@ h3{
         <!--<div><b>FPS: </b><span id="fps-counter">0</span></div>!-->
         <div><b>Radar: </b><span id="radar-status">Conectando...</span></div>
         <div id="velocidad-label">Velocidad: 0%</div>
-        <div id="Profundidad-label">Profundidad: 0%</div>
+        <div id="Profundidad-label">Inmersión: Detenido</div>
       </div>
 
       <canvas id="radar-canvas"></canvas>
@@ -390,36 +490,72 @@ h3{
           value="0"
           orient="vertical"
         />
-        <p class="vel-txt">Velocidad</p>
       </div>
-
-      <div>
-        <input
-          type="range"
-          class="slider-vertical"
-          id="slider-prof"
-          min="0"
-          max="100"
-          value="0"
-          orient="vertical"
-        />
-        <p class="prof-txt">Profundidad</p>
+      <div class="dir-inmersion">
+        <button id="btn-subir">▲</button>
+        <button id="btn-neutro">⬤</button>
+        <button id="btn-bajar">▼</button>
       </div>
     </div>
     
     <div id="joystick-dir" class="joystick">
       <button id="btn-forward">▲</button>
-      <div class="dir-central">
+      <div class="dir-central control-normal">
         <button id="btn-left">◀</button>
         <button id="btn-center">△</button>
         <button id="btn-right">▶</button>
       </div>
+      <div class="dir-central control-eje controles-block">
+        <button id="btn-left-Axis">◀</button>
+        <button id="btn-center-Axis">△</button>
+        <button id="btn-right-Axis">▶</button>
+      </div>
+      <button id="btn-axis">↺</button>
       <button id="btn-norm">⬤</button>
       <button id="btn-backward">▼</button>
     </div>
   </div>
 
   <script>
+    // Variables globales para el cooldown
+    let cooldownActivo = false;
+    const COOLDOWN_TIME = 500; // 500ms de cooldown
+    
+    // Función para manejar el cooldown
+    function activarCooldown() {
+      if (cooldownActivo) return false;
+      
+      cooldownActivo = true;
+      
+      // Deshabilitar visualmente los botones de servo
+      const botonesServo = [
+        document.getElementById("btn-forward"),
+        document.getElementById("btn-backward"),
+        document.getElementById("btn-center"),
+        document.getElementById("btn-center-Axis"),
+        document.getElementById("btn-left-Axis"),
+        document.getElementById("btn-right-Axis"),
+        document.getElementById("btn-subir"),
+        document.getElementById("btn-bajar"),
+        document.getElementById("btn-neutro")
+      ];
+      
+      botonesServo.forEach(boton => {
+        boton.classList.add('cooldown-active');
+        boton.disabled = true;
+      });
+      
+      setTimeout(() => {
+        cooldownActivo = false;
+        botonesServo.forEach(boton => {
+          boton.classList.remove('cooldown-active');
+          boton.disabled = false;
+        });
+      }, COOLDOWN_TIME);
+      
+      return true;
+    }
+
     const videoElement = document.getElementById('video');
 
     videoElement.onerror = function() {
@@ -434,14 +570,8 @@ h3{
     const fullscreenBtn = document.getElementById("fullscreen-btn");
     const exitFullscreenBtn = document.getElementById("exit-fullscreen-btn");
     const velocidadLabel = document.getElementById("velocidad-label");
-    const sliderProf = document.getElementById("slider-prof");
     const profundidadLabel = document.getElementById("Profundidad-label");
-
-    sliderProf.addEventListener("input", (e) => {
-      const valorProfundidad = parseInt(e.target.value);
-      profundidadLabel.textContent = `Profundidad: ${valorProfundidad}%`;
-      enviarProfundidad(valorProfundidad);
-    });
+    const sliderVel = document.getElementById("slider-vel");
 
     fullscreenBtn.addEventListener("click", () => {
       const elem = document.documentElement;
@@ -454,6 +584,19 @@ h3{
       if (document.exitFullscreen) document.exitFullscreen();
       exitFullscreenBtn.style.display = "none";
       fullscreenBtn.style.display = "inline";
+    });
+
+    document.getElementById("btn-reconectar").addEventListener("click", () => {
+      fetch("/reconectar_todos")
+          .then(r => r.json())
+          .then(data => {
+              let mensajes = "";
+              for (let [arduino, res] of Object.entries(data)) {
+                  mensajes += `${arduino}: ${res.mensaje}\n`;
+              }
+              alert(mensajes);
+          })
+          .catch(err => alert("Error en el servidor"));
     });
 
     toggleBtn.addEventListener("click", () => {
@@ -478,7 +621,8 @@ h3{
         });
     });
 
-    const sliderVel = document.getElementById("slider-vel");
+    const btnSubir = document.getElementById("btn-subir");
+    const btnBajar = document.getElementById("btn-bajar");
     const joystickDir = document.getElementById("joystick-dir");
     const debugPanel = document.getElementById("debug-panel");
     const fpsCounterEl = document.getElementById("fps-counter");
@@ -491,7 +635,14 @@ h3{
     const btnForward = document.getElementById("btn-forward");
     const btnBackward = document.getElementById("btn-backward");
     const btnCenter = document.getElementById("btn-center");
+    const btnCenterAxis = document.getElementById("btn-center-Axis");
+    const btnNeutro = document.getElementById("btn-neutro");
     const btnNorm = document.getElementById("btn-norm");
+    const btnAxis = document.getElementById("btn-axis");
+    const ejeDer = document.getElementById("btn-right-Axis");
+    const ejeIzq = document.getElementById("btn-left-Axis");
+    const controlNormal = document.querySelector(".control-normal");
+    const controlEje = document.querySelector(".control-eje");
 
     // Variables globales de control
     let velocidad = 0;
@@ -502,30 +653,71 @@ h3{
     function enviarDatos() {
       if (enviando) return;
       enviando = true;
-      fetch("/update_leds", {
+      fetch("/update_motors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ velocidad, direccion })
       }).then(() => { enviando = false; });
     }
 
-    // Enviar profundidad para inmersión (servo + bomba)
-    function enviarProfundidad(valor) {
-  fetch("/update_profundidad", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ porcentaje: valor }) // Cambiado a 'porcentaje'
-  }).catch(console.error);
-}
-//enviar posicion servos de posicion
-function enviarServoDireccion(cmd) {
-  fetch("/update_servo_dir", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ cmd }) // Cambiado a 'cmd'
-  }).catch(console.error);
-}
+    // Control de profundidad con cooldown
+    function controlarProfundidad(accion) {
+      
+      // Actualizar interfaz
+      if (accion === 'subir') {
+        profundidadLabel.textContent = 'Inmersión: subiendo';
+        btnSubir.style.background = "rgba(33, 199, 0, 0.8)";
+        btnBajar.style.background = "rgba(43, 255, 0, 0.8)";
+      } else if (accion === 'bajar') {
+        profundidadLabel.textContent = 'Inmersión: bajando';
+        btnBajar.style.background = "rgba(33, 199, 0, 0.8)";
+        btnSubir.style.background = "rgba(43, 255, 0, 0.8)";
+      } else {
+        profundidadLabel.textContent = 'Inmersión: neutro';
+        btnSubir.style.background = "rgba(43, 255, 0, 0.8)";
+        btnBajar.style.background = "rgba(43, 255, 0, 0.8)";
+      }
 
+      // Enviar comando al backend
+      fetch("/control_profundidad", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accion })
+      }).catch(console.error);
+    }
+
+    btnSubir.addEventListener("click", () => {
+      direccion = 50;
+      velocidad = 0;
+      sliderVel.value = 0;
+      controlarProfundidad("subir");
+      enviarDatos();
+    });
+    btnBajar.addEventListener("click", () => {
+      direccion = 50;
+      velocidad = 0;
+      sliderVel.value = 0;
+      controlarProfundidad("bajar");
+      enviarDatos();
+    });
+    btnNeutro.addEventListener("click", () => {
+      direccion = 50;
+      velocidad = 0;
+      sliderVel.value = 0;
+      controlarProfundidad("neutro");
+      enviarDatos();
+    });
+
+    // Enviar comando a servos con cooldown
+    function enviarServoDireccion(cmd) {
+      if (!activarCooldown()) return;
+      
+      fetch("/control_servo", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cmd })
+      }).catch(console.error);
+    }
 
     sliderVel.addEventListener("input", (e) => {
       velocidad = Math.max(parseInt(e.target.value), 0);
@@ -533,18 +725,67 @@ function enviarServoDireccion(cmd) {
       enviarDatos();
     });
 
+    // Cambiar a giro sobre propio eje
+    btnAxis.addEventListener("click", () => {
+      direccion = 50;
+      velocidad = 0;
+      sliderVel.value = 0;
+      velocidadLabel.textContent = `Velocidad: 0%`;
+      btnAxis.classList.toggle("giro-eje-select");
+      
+      if(controlNormal.classList.contains("controles-block")){
+        controlNormal.classList.remove("controles-block");
+      } else{
+        controlNormal.classList.add("controles-block");
+      }
+      if(controlEje.classList.contains("controles-block")){
+        controlEje.classList.remove("controles-block");
+      } else{
+        controlEje.classList.add("controles-block");
+      }
+      
+      enviarDatos();
+    });
+
+    // Giro sobre eje - derecho
+    ejeDer.addEventListener("click", () => {
+      direccion = 50;
+      velocidad = 0;
+      sliderVel.value = 0;
+      velocidadLabel.textContent = `Velocidad: 0%`;
+      ejeIzq.style.background = "rgb(1, 202, 202)";
+      ejeDer.style.background = "rgb(0, 144, 144)";
+      enviarDatos();
+      enviarServoDireccion("der");
+    });
+    
+    // Giro sobre eje - izq
+    ejeIzq.addEventListener("click", () => {
+      direccion = 50;
+      velocidad = 0;
+      sliderVel.value = 0;
+      velocidadLabel.textContent = `Velocidad: 0%`;      
+      ejeIzq.style.background = "rgb(0, 144, 144)";
+      ejeDer.style.background = "rgb(1, 202, 202)";
+      enviarDatos();
+      enviarServoDireccion("izq");
+    });
+
     // Manejo de joystick de dirección para servos y dirección general
     btnNorm.addEventListener("click", () => {
-      direccion = 50; // normalizar
+      direccion = 50;
       btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
       btnRight.style.background = "rgba(43, 255, 0, 0.8)";
       btnForward.style.background = "rgba(43, 255, 0, 0.8)";
       btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
       btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
+      ejeIzq.style.background = "rgb(1, 202, 202)";
+      ejeDer.style.background = "rgb(1, 202, 202)";
       enviarDatos();
     });
+    
     btnLeft.addEventListener("click", () => {
-      direccion = 25; // izquierda
+      direccion = 25;
       btnLeft.style.background = "rgba(33, 199, 0, 0.8)";
       btnRight.style.background = "rgba(43, 255, 0, 0.8)";
       btnForward.style.background = "rgba(43, 255, 0, 0.8)";
@@ -554,7 +795,7 @@ function enviarServoDireccion(cmd) {
     });
 
     btnRight.addEventListener("click", () => {
-      direccion = 75; // derecha
+      direccion = 75;
       btnRight.style.background = "rgba(33, 199, 0, 0.8)";
       btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
       btnForward.style.background = "rgba(43, 255, 0, 0.8)";
@@ -564,41 +805,57 @@ function enviarServoDireccion(cmd) {
     });
 
     btnForward.addEventListener("click", () => {
-      direccion = 50; // adelante
+      direccion = 50;
       velocidad = 0;
+      sliderVel.value = 0;
+      velocidadLabel.textContent = `Velocidad: 0%`;      
       btnForward.style.background = "rgba(33, 199, 0, 0.8)";
       btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
       btnRight.style.background = "rgba(43, 255, 0, 0.8)";
       btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
       btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
       enviarDatos();
-      // Para dirección vertical, enviar ángulo 0 (adelante)
       enviarServoDireccion("frw");
     });
 
     btnBackward.addEventListener("click", () => {
       direccion = 50; 
       velocidad = 0;
+      sliderVel.value = 0;
+      velocidadLabel.textContent = `Velocidad: 0%`;      
       btnBackward.style.background = "rgba(33, 199, 0, 0.8)";
       btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
       btnRight.style.background = "rgba(43, 255, 0, 0.8)";
       btnForward.style.background = "rgba(43, 255, 0, 0.8)";
       btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
       enviarDatos();
-      // Enviar ángulo 180 para reversa vertical (servo)
       enviarServoDireccion("bkw");
     });
 
     btnCenter.addEventListener("click", () => {
-      direccion = 50; // centro
+      direccion = 50;
       velocidad = 0;
+      sliderVel.value = 0;
+      velocidadLabel.textContent = `Velocidad: 0%`;      
       btnCenter.style.background = "rgba(33, 199, 0, 0.8)";
       btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
       btnRight.style.background = "rgba(43, 255, 0, 0.8)";
       btnForward.style.background = "rgba(43, 255, 0, 0.8)";
       btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
       enviarDatos();
-      // Enviar ángulo 90 para posición neutra / subida lenta
+      enviarServoDireccion("up");
+    });
+    btnCenterAxis.addEventListener("click", () => {
+      direccion = 50;
+      velocidad = 0;
+      sliderVel.value = 0;
+      velocidadLabel.textContent = `Velocidad: 0%`;      
+      btnCenter.style.background = "rgba(33, 199, 0, 0.8)";
+      btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
+      btnRight.style.background = "rgba(43, 255, 0, 0.8)";
+      btnForward.style.background = "rgba(43, 255, 0, 0.8)";
+      btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
+      enviarDatos();
       enviarServoDireccion("up");
     });
 
