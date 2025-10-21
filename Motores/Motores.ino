@@ -1,284 +1,171 @@
-/*#include <Servo.h>
 
-Servo escIzq;
-Servo escDer;
-Servo servoIzq;
-Servo servoDer;
-
-const int pinEscIzq = 9;
-const int pinEscDer = 10;
-const int pinServoIzq = 8;   // Ajusta estos pines según tu conexión
-const int pinServoDer = 5;
-
-int velocidad = 0;
-int direccion = 50;
-
-int posicionServo = 0;  // Default 0°
-
-void setup() {
-  Serial.begin(9600);
-  escIzq.attach(pinEscIzq);
-  escDer.attach(pinEscDer);
-
-  servoIzq.attach(pinServoIzq);
-  servoDer.attach(pinServoDer);
-
-  escIzq.writeMicroseconds(1000);
-  escDer.writeMicroseconds(1000);
-
-  servoIzq.write(posicionServo);
-  servoDer.write(posicionServo);
-
-  Serial.println("Arduino ESC motores y servos listo");
-}
-
-void loop() {
-  if (Serial.available()) {
-    String line = Serial.readStringUntil('\n');
-    line.trim();
-
-    if (line.length() > 0) {
-      if (line.startsWith("ORIENT:")) {
-        int pos = line.substring(7).toInt();
-        if (pos == 0 || pos == 90 || pos == 180) {
-          posicionServo = pos;
-          servoIzq.write(pos);
-          servoDer.write(pos);
-          Serial.print("Servo orientacion a ");
-          Serial.println(pos);
-        }
-      } else {
-        int comaIndex = line.indexOf(',');
-        if (comaIndex > 0) {
-          int vel = line.substring(0, comaIndex).toInt();
-          int dir = line.substring(comaIndex + 1).toInt();
-
-          if (vel >= 0 && vel <= 100 && dir >= 0 && dir <= 100) {
-            velocidad = vel;
-            direccion = dir;
-            controlarMotores(velocidad, direccion);
-          }
-        }
-      }
-    }
-  }
-}
-
-void controlarMotores(int vel, int dir) {
-  if (vel < 10) {
-    escIzq.writeMicroseconds(1000);
-    escDer.writeMicroseconds(1000);
-    Serial.println("Motores detenidos por baja velocidad");
-    return;
-  }
-
-  // Mapeo individual: motor izquierdo desde 1250, derecho desde 1000
-  int pwmBaseIzq = map(vel, 10, 100, 1250, 2000);
-  int pwmBaseDer = map(vel, 10, 100, 1000, 2000);
-
-  float factorIzq = 1.0;
-  float factorDer = 1.0;
-
-  if (dir < 50) {
-    factorIzq = (float)dir / 50.0;
-  } else if (dir > 50) {
-    factorDer = (float)(100 - dir) / 50.0;
-  }
-
-  int pwmIzq = constrain(pwmBaseIzq * factorIzq, 1000, 2000);
-  int pwmDer = constrain(pwmBaseDer * factorDer, 1000, 2000);
-
-  escIzq.writeMicroseconds(pwmIzq);
-  escDer.writeMicroseconds(pwmDer);
-
-  Serial.print("PWM Izq: ");
-  Serial.print(pwmIzq);
-  Serial.print("  PWM Der: ");
-  Serial.println(pwmDer);
-}
-*/
 
 #include <Servo.h>
 
-Servo escIzq;
-Servo escDer;
-
 const int pinEscIzq = 9;
 const int pinEscDer = 10;
 
-int velocidad = 0;
-int direccion = 50;
+// Ventana típica de ESCs (us)
+const int MIN_US = 1000;
+const int MAX_US = 2000;
 
-void setup() {
-  Serial.begin(9600);
-  escIzq.attach(pinEscIzq);
-  escDer.attach(pinEscDer);
+// Armado en el arranque: mantener mínimo durante unos segundos
+const bool ARM_ON_BOOT       = true;
+const unsigned long ARM_MS   = 3000;
 
-  escIzq.writeMicroseconds(1000);
-  escDer.writeMicroseconds(1000);
+// Failsafe: si no llegan comandos en este tiempo, cortar a MIN_US
+const unsigned long FAILSAFE_MS = 30000;  // 30 s
 
-  Serial.println("Arduino ESC motores listo");
+// Suavizado (rampa)
+const int RAMP_STEP_US         = 10;    // microsegundos por paso
+const unsigned long RAMP_DT_MS = 10;    // periodo de rampa
+
+// Serial
+const unsigned long BAUD = 9600;
+
+// Estado
+Servo escIzq, escDer;
+
+int targetLeftUS  = MIN_US;
+int targetRightUS = MIN_US;
+int currLeftUS    = MIN_US;
+int currRightUS   = MIN_US;
+
+unsigned long lastCmdMs  = 0;
+unsigned long lastRampMs = 0;
+
+// Buffer para leer líneas de Serial
+static const size_t LINE_BUF_SZ = 32;
+char lineBuf[LINE_BUF_SZ];
+size_t lineLen = 0;
+
+inline int clampInt(int v, int lo, int hi) {
+  if (v < lo) return lo;
+  if (v > hi) return hi;
+  return v;
 }
 
-void loop() {
-  if (Serial.available()) {
-    String line = Serial.readStringUntil('\n');
-    line.trim();
-    if (line.length() > 0) {
-      int comaIndex = line.indexOf(',');
-      if (comaIndex > 0) {
-        int vel = line.substring(0, comaIndex).toInt();
-        int dir = line.substring(comaIndex + 1).toInt();
+void writeOutputsNow() {
+  escIzq.writeMicroseconds(currLeftUS);
+  escDer.writeMicroseconds(currRightUS);
+}
 
-        if (vel >= 0 && vel <= 100 && dir >= 0 && dir <= 100) {
-          velocidad = vel;
-          direccion = dir;
-          controlarMotores(velocidad, direccion);
-        }
-      }
-    }
+void rampOutputs() {
+  const unsigned long now = millis();
+  if (now - lastRampMs < RAMP_DT_MS) return;
+  lastRampMs = now;
+
+  // Izquierdo
+  if (currLeftUS < targetLeftUS)
+    currLeftUS = min(currLeftUS + RAMP_STEP_US, targetLeftUS);
+  else if (currLeftUS > targetLeftUS)
+    currLeftUS = max(currLeftUS - RAMP_STEP_US, targetLeftUS);
+
+  // Derecho
+  if (currRightUS < targetRightUS)
+    currRightUS = min(currRightUS + RAMP_STEP_US, targetRightUS);
+  else if (currRightUS > targetRightUS)
+    currRightUS = max(currRightUS - RAMP_STEP_US, targetRightUS);
+
+  writeOutputsNow();
+}
+
+void applyFailsafeIfStale() {
+  const unsigned long now = millis();
+  if (now - lastCmdMs > FAILSAFE_MS) {
+    targetLeftUS  = MIN_US;
+    targetRightUS = MIN_US;
   }
 }
 
+// Parsing de la línea: espera "M,<v1>,<v2>"
+void handleLine(char* s) {
+  // Quitar \r opcional
+  size_t n = strlen(s);
+  if (n && s[n-1] == '\r') s[n-1] = '\0';
 
-
-void controlarMotores(int vel, int dir) {
-  if (vel < 10) {
-    escIzq.writeMicroseconds(1000);
-    escDer.writeMicroseconds(1000);
-    Serial.println("Motores detenidos por baja velocidad");
+  if (s[0] != 'M') {
+    // formato desconocido -> ignorar
     return;
   }
 
-  // Mapeo individual: motor izquierdo desde 1250, derecho desde 1000
-  int pwmBaseIzq = map(vel, 10, 100, 1250, 2000);
-  int pwmBaseDer = map(vel, 10, 100, 1000, 2000);
+  // Espera "M,<v1>,<v2>"
+  char* p  = strchr(s, ',');
+  if (!p) return;
+  char* p2 = strchr(p + 1, ',');
+  if (!p2) return;
 
-  float factorIzq = 1.0;
-  float factorDer = 1.0;
+  char* v1Str = p + 1;
+  *p2 = '\0';
+  char* v2Str = p2 + 1;
 
-  if (dir < 50) {
-    factorIzq = (float)dir / 50.0;
-  } else if (dir > 50) {
-    factorDer = (float)(100 - dir) / 50.0;
-  }
+  int v1 = clampInt(atoi(v1Str), 0, 100);
+  int v2 = clampInt(atoi(v2Str),  0, 100);
 
-  int pwmIzq = constrain(pwmBaseIzq * factorIzq, 1000, 2000);
-  int pwmDer = constrain(pwmBaseDer * factorDer, 1000, 2000);
+  // Mapear a microsegundos
+  targetLeftUS  = map(v1, 0, 100, MIN_US, MAX_US);
+  targetRightUS = map(v2, 0, 100, MIN_US, MAX_US);
 
-  escIzq.writeMicroseconds(pwmIzq);
-  escDer.writeMicroseconds(pwmDer);
+  lastCmdMs = millis();
 
-  Serial.print("PWM Izq: ");
-  Serial.print(pwmIzq);
-  Serial.print("  PWM Der: ");
-  Serial.println(pwmDer);
+  // (Opcional) eco de depuración
+  // Serial.print(F("ACK M,")); Serial.print(v1); Serial.print(','); Serial.println(v2);
 }
 
-/*
-#include <ESP32Servo.h>
+void readSerialLines() {
+  while (Serial.available() > 0) {
+    char c = (char)Serial.read();
 
-Servo escIzq;   // ESC motor izquierdo
-Servo escDer;   // ESC motor derecho
-
-// Pines para ESP32 (puedes cambiarlos según tu configuración)
-const int pinEscIzq = 16;  // Pin PWM para ESC izquierdo (GPIO16)
-const int pinEscDer = 17;  // Pin PWM para ESC derecho (GPIO17)
-
-int velocidad = 0;  // 0-100
-int direccion = 50; // 0-100 (50 es centro)
-
-void setup() {
-  Serial.begin(115200);  // ESP32 usa comúnmente 115200 baudios
-  
-  // Permitir asignación de todos los timers ESP32
-  ESP32PWM::allocateTimer(0);
-  ESP32PWM::allocateTimer(1);
-  ESP32PWM::allocateTimer(2);
-  ESP32PWM::allocateTimer(3);
-  
-  // Configurar ESCs
-  escIzq.setPeriodHertz(50);  // Frecuencia estándar para ESCs (50Hz)
-  escDer.setPeriodHertz(50);
-  
-  escIzq.attach(pinEscIzq, 1000, 2000);  // Asignar pin con rango de pulsos (1000-2000μs)
-  escDer.attach(pinEscDer, 1000, 2000);
-
-  // Inicializar ESCs en señal de 0% velocidad (usualmente 1000us pulso)
-  escIzq.writeMicroseconds(1000);
-  escDer.writeMicroseconds(1000);
-
-  Serial.println("ESP32 ESC motores listo");
-}
-
-void loop() {
-  if (Serial.available()) {
-    String line = Serial.readStringUntil('\n');
-    line.trim();
-    if (line.length() > 0) {
-      int comaIndex = line.indexOf(',');
-      if (comaIndex > 0) {
-        String velStr = line.substring(0, comaIndex);
-        String dirStr = line.substring(comaIndex + 1);
-        int vel = velStr.toInt();
-        int dir = dirStr.toInt();
-
-        // Validar rango
-        if (vel >= 0 && vel <= 100 && dir >= 0 && dir <= 100) {
-          velocidad = vel;
-          direccion = dir;
-          controlarMotores(velocidad, direccion);
-
-          // Enviar confirmación
-          Serial.print("Recibido Velocidad=");
-          Serial.print(velocidad);
-          Serial.print(" Dirección=");
-          Serial.println(direccion);
-        }
+    if (c == '\n') {
+      // Termina línea
+      lineBuf[clampInt((int)lineLen, 0, (int)LINE_BUF_SZ-1)] = '\0';
+      if (lineLen > 0) {
+        handleLine(lineBuf);
+      }
+      lineLen = 0;  // reset buffer
+    } else {
+      if (lineLen < LINE_BUF_SZ - 1) {
+        lineBuf[lineLen++] = c;
+      } else {
+        // Overflow: resetea para evitar basura
+        lineLen = 0;
       }
     }
   }
 }
 
-// Función para controlar ESCs según velocidad y dirección
-void controlarMotores(int vel, int dir) {
-  // Convertir velocidad y dirección 0-100 a valores de PWM para ESC (1000us-2000us)
-  // Se supone que 1000us = stop, 2000us = máxima velocidad
-
-  // Calcular velocidades de cada motor según dirección:
-  // Dirección 50 = ambos igual velocidad
-  // Dirección < 50 = motor izquierdo más lento (gira a la izquierda)
-  // Dirección > 50 = motor derecho más lento (gira a la derecha)
-
-  float velNorm = map(vel, 0, 100, 1000, 2000);  // escala para ESC
-
-  float factorIzq = 1.0;
-  float factorDer = 1.0;
-
-  if (dir < 50) {
-    // Gira a la izquierda: motor izquierdo reduce velocidad
-    factorIzq = (float)dir / 50.0;   // de 0 a 1 cuando dir va de 0 a 50
-    factorDer = 1.0;
-  }
-  else if (dir > 50) {
-    // Gira a la derecha: motor derecho reduce velocidad
-    factorIzq = 1.0;
-    factorDer = (float)(100 - dir) / 50.0; // de 1 a 0 cuando dir va de 50 a 100
-  }
-  else {
-    factorIzq = 1.0;
-    factorDer = 1.0;
-  }
-
-  int pwmIzq = constrain((int)(velNorm * factorIzq), 1100, 2000);
-  int pwmDer = constrain((int)(velNorm * factorDer), 1000, 2000);
-
-  escIzq.writeMicroseconds(pwmIzq);
-  escDer.writeMicroseconds(pwmDer);
-
-  Serial.print("PWM Izq: ");
-  Serial.print(pwmIzq);
-  Serial.print("  PWM Der: ");
-  Serial.println(pwmDer);
+void armESCsIfNeeded() {
+  if (!ARM_ON_BOOT) return;
+  // Mantener mínimo por ARM_MS
+  escIzq.writeMicroseconds(MIN_US);
+  escDer.writeMicroseconds(MIN_US);
+  delay(ARM_MS);
 }
-*/
+
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  Serial.begin(BAUD);
+  // En Nano no bloquea, mantenido por compatibilidad
+
+  escIzq.attach(pinEscIzq);  // Timer1
+  escDer.attach(pinEscDer);
+
+  currLeftUS = currRightUS = MIN_US;
+  targetLeftUS = targetRightUS = MIN_US;
+  writeOutputsNow();
+
+  armESCsIfNeeded();
+
+  lastCmdMs  = millis();
+  lastRampMs = millis();
+
+  // Indicar listo (parpadeo rápido)
+  for (int i=0;i<3;i++){ digitalWrite(LED_BUILTIN, HIGH); delay(80); digitalWrite(LED_BUILTIN, LOW); delay(80); }
+}
+
+void loop() {
+  readSerialLines();
+  applyFailsafeIfStale();  // <- vuelve a mínimo si no llegan comandos
+  rampOutputs();
+}
