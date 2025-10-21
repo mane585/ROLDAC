@@ -1,442 +1,343 @@
+<!-- v3 – Alineado a /update_motors_dual, /set_servos, /control_servo, /set_depth 
+ control sin UP-->
+
+<!--02/10/25-->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Robot Acuático</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <style>
-   * { box-sizing: border-box; touch-action: none; }
+    :root{
+      --size: 90px; --btn: 25px; --pad: 6px;
+      --r: calc(var(--size)/2 - var(--btn)/2 - var(--pad));
+      --accent: #2e90ff; --crop: 35px;
+    }
+    * { box-sizing: border-box; touch-action: none; }
     body { margin: 0; background: black; overflow: hidden; font-family: sans-serif; }
 
-    #contenedor {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-    }
+    #contenedor { position: relative; width: 100vw; height: 100vh; }
 
     #video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      position: absolute;
-      z-index: 0;
+      width: 100%; height: 100%; object-fit: cover;
+      position: absolute; z-index: 0;
     }
 
     .joystick {
-      position: absolute;
-      width: 140px !important;
-      height: 140px !important;
-      background: rgba(255, 255, 255, 0.05);
+      position: absolute; width: 140px !important; height: 140px !important;
+      background: rgba(255,255,255,0.05);
       border: 2px solid rgba(255,255,255,0.2);
-      border-radius: 50%;
-      z-index: 10;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-content: center;
-      gap: 8px;
-      padding: 8px;
+      border-radius: 50%; z-index: 10;
+      display: flex; flex-wrap: wrap; justify-content: center; align-content: center;
+      gap: 8px; padding: 8px;
     }
-    .dir-inmersion{
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 75px;
-      margin-left: 65px;
-    }
-    .dir-inmersion button{
-      width: 40px;
-      height: 40px;
-      font-size: 20px;
-      background: rgba(43, 255, 0, 0.8);
-      border: 2px solid white;
-      border-radius: 8px;
-      color: white;
-      user-select: none;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
+    .dir-inmersion { display: flex; flex-direction: column; gap: 8px; margin-bottom: 75px; margin-left: 65px; height: fit-content !important;}
+   .dir-inmersion button,
     .joystick button {
-      width: 40px;
-      height: 40px;
-      font-size: 20px;
+      width: 40px; height: 40px; font-size: 20px;
       background: rgba(43, 255, 0, 0.8);
-      border: 2px solid white;
-      border-radius: 8px;
-      color: white;
-      user-select: none;
-      cursor: pointer;
-      transition: background 0.3s;
+      border: 2px solid white; border-radius: 8px; color: white;
+      user-select: none; cursor: pointer; transition: background 0.3s;
     }
-    .joystick button:hover {
-      background: rgba(60, 255, 60, 1);
-    }
-    .joystick button:disabled {
-      background: rgba(100, 100, 100, 0.5);
-      cursor: not-allowed;
-      opacity: 0.5;
-    }
+    .joystick button:hover { background: rgba(60, 255, 60, 1); }
+
     #btn-reconectar{
-      width: 30px;
-      height: 30px;
-      font-size: 20px;
-      background: rgba(255, 0, 0, 0.434);
-      border: 2px solid white;
-      border-radius: 8px;
-      color: white;
-      margin-left: 10px;
-      user-select: none;
-      cursor: pointer;
-      transition: background 0.3s;
-      z-index: 999;
+      width: 30px; height: 30px; font-size: 20px;
+      background: rgba(255, 0, 0, .6);
+      border: 2px solid white; border-radius: 8px; color: white; margin-left: 10px;
+      user-select: none; cursor: pointer; transition: background .3s; z-index: 999;
     }
+
     .slider-container {
-      position: absolute;
-      left: 1%;
-      bottom: -8%;
-      width: fit-content;
-      height: fit-content;
-      z-index: 10;
-      display: flex;
-      flex-direction: row;
+      position: absolute; left: 1%; bottom: -8%;
+      width: fit-content; height: fit-content; z-index: 10;
+      display: flex; flex-direction: row;
     }
 
     .slider-vertical {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 12rem;
-      height: 40px;
-      background: rgba(255, 255, 255, 0.05);
+      -webkit-appearance: none; appearance: none;
+      width: 12rem; height: 40px;
+      background: rgba(255,255,255,0.05);
       border: 2px solid rgba(255,255,255,0.2);
-      border-radius: 10px;
-      transform-origin: left top;
-      z-index: 999;
+      border-radius: 10px; transform-origin: left top; z-index: 999;
     }
-    
-    #slider-vel{
-      position: absolute;
-      transform: rotate(270deg);
-      bottom: 8px;
-      left: 10px;
-    }
-    #slider-vel::-webkit-slider-thumb{
-      background: rgba(43, 255, 0, 0.8);
+    .slider-vertical-control { width: 10rem !important; height: 20px !important; }
 
-    }
+    #slider-prof{ position: absolute; bottom: 200px; left: 45px; transform: rotate(90deg); }
+    #slider-vel{ position: absolute; transform: rotate(270deg); bottom: 8px; left: 55px; }
+    #slider-vel::-webkit-slider-thumb{ background: rgba(43,255,0,.8); }
+    #slider-prof::-webkit-slider-thumb{ background: rgba(0,255,255,.8); }
+
+    .control-libre{ position: absolute; bottom: 0; left: 0; }
+
+    #slider-servo1::-webkit-slider-thumb{ background: rgba(0,150,52,.8); }
+    #slider-servo2::-webkit-slider-thumb{ background: rgba(0,42,45,.8); }
+    #slider-motor1::-webkit-slider-thumb{ background: rgba(171,0,145,.8); }
+    #slider-motor2::-webkit-slider-thumb{ background: rgba(83,206,0,.8); }
+
+    #slider-servo1{ position: absolute; bottom: 140px; left: -485px; }
+    #slider-servo2{ position: absolute; bottom: 140px; left: 95px; }
+    #slider-motor1{ position: absolute; bottom: -20px; left: -465px; }
+    #slider-motor2{ position: absolute; bottom: -20px; left: 35px; }
+    #slider-motor1, #slider-motor2{ transform: rotate(270deg); }
+    #slider-servo1, #slider-servo2 {transform: rotate(90deg); }
     
+    .dirM1-txt, .dirM2-txt, .M1-txt, .M2-txt{
+      transform: rotate(270deg);
+      position: absolute; bottom: 75px; color: white; font-size: 9px; font-weight: bold; z-index: 1; width: 100px;
+    }
     .vel-txt, .prof-txt{
       transform: rotate(270deg);
-      position: absolute;
-      bottom: 120px;
-      color: white;
-      font-size: 15px;
-      font-weight: bold;
-      z-index: 1;
+      position: absolute; bottom: 120px; color: white; font-size: 15px; font-weight: bold; z-index: 1;
     }
-    .vel-txt{
-      left: -2px;
-    }
-    .prof-txt{
-      left: -17px;
-    }
-    .slider-vertical::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 30px;
-      height: 30px;
-      border: 2px solid white;
-      border-radius: 50%;
-      cursor: pointer;
-      
-    }
+    .vel-txt{ left: 43px; } .prof-txt{ left: -17px; }
+    .dirM1-txt{ left: -543px; } .dirM2-txt{ left: 37px; }
+    .M1-txt{ left: -503px; } .M2-txt{ left: -3px; }
 
-    .slider-vertical::-moz-range-thumb {
-      width: 30px;
-      height: 30px;
-      background: rgba(0, 255, 255, 0.8);
-      border: 2px solid white;
-      border-radius: 50%;
-      cursor: pointer;
+    .slider-vertical::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 30px; height: 30px;
+      border: 2px solid white; border-radius: 50%; cursor: pointer;
     }
+    .slider-vertical::-moz-range-thumb {
+      width: 30px; height: 30px; background: rgba(0,255,255,.8);
+      border: 2px solid white; border-radius: 50%; cursor: pointer;
+    }
+    .slider-vertical-control::-webkit-slider-thumb { width: 15px; height: 23px; }
+    .slider-vertical-control::-moz-range-thumb   { width: 15px; height: 20px; }
 
     #joystick-dir {
-      right: 3%;
-      bottom: 5%;
-      position: absolute;
-      z-index: 10;
+      right: 3%; bottom: 5%; position: absolute; z-index: 10;
       background: transparent;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-content: center;
-      gap: 8px;
-      padding: 8px;
-      text-align: center;
+      display: flex; flex-wrap: wrap; justify-content: center; align-content: center;
+      gap: 8px; padding: 8px; text-align: center;
     }
-    .dir-central{
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-    }
-    #btn-center{
-      margin: 0 10px;
-    }
-    #fullscreen-btn,
-    #exit-fullscreen-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 20;
-      background: rgba(0,0,0,0.5);
-      border: none;
-      color: white;
-      font-size: 28px;
-      padding: 8px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+    .dir-central{ display: flex; flex-direction: row; justify-content: space-between; }
 
+    #fullscreen-btn, #exit-fullscreen-btn {
+      position: absolute; top: 10px; right: 10px; z-index: 20;
+      background: rgba(0,0,0,0.5); border: none; color: white; font-size: 28px;
+      padding: 8px; border-radius: 6px; cursor: pointer;
+    }
     #exit-fullscreen-btn { right: 10px; display: none; }
 
     #debug-panel {
-      background: rgba(0, 0, 0, 0.212);
-      color: white;
-      padding: 10px;
-      z-index: 100;
-      border-radius: 5px;
-      font-size: 10px;
-      max-width: 300px;
-      line-height: 1.2;
-      margin-bottom: 5px;
-      width: 165px;
+      background: rgba(0,0,0,0.212); color: white; padding: 10px; z-index: 100;
+      border-radius: 5px; font-size: 10px; max-width: 223px; line-height: 1.2; margin-top: 5px;
     }
-
-    #debug-panel h3 {
-      margin: 0 0 4px;
-      color: cyan;
-      font-size: 12px;
-    }
-
+    #debug-panel h3 { margin: 0 0 4px; color: cyan; font-size: 12px; }
     #detection-status { color: lime; font-weight: bold; font-size: 10px; }
     #detection-status.off { color: red; }
     #radar-status, #fps-counter { font-size: 11px; }
 
     #radar-canvas {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 250px;
-      height: 150px;
-      background: black;
-      border: 2px solid cyan;
-      z-index: 50;
-      font-size: 10px !important;
+      position: absolute; top: 10px; left: 10px; width: 250px; height: 150px;
+      background: black; border: 2px solid cyan; z-index: 50; font-size: 10px !important;
     }
 
-    #detection-toggle, #radar-toggle, #fullscreen-btn,
-    #exit-fullscreen-btn, #close-radar-btn {
-      font-size: 10px;
-      padding: 6px 8px;
+    #detection-toggle, #radar-toggle, #fullscreen-btn, #exit-fullscreen-btn, #close-radar-btn {
+      font-size: 10px; padding: 6px 8px;
     }
-
     #detection-toggle {
-      z-index: 20;
-      padding: 10px;
-      background: rgba(0, 255, 0, 0.26);
-      border: none;
-      border-radius: 8px;
-      color: white;
-      width: 90px;
-      height: fit-content;
-      margin-bottom: 10px;
-      font-size: 10px ;
+      z-index: 20; padding: 10px; background: rgba(0,255,0,.26);
+      border: none; border-radius: 8px; color: white; width: 90px; height: fit-content;
     }
-
     #radar-toggle {
-      z-index: 20;
-      padding: 10px;
-      background: rgba(0,200,255,0.26);
-      border: none;
-      border-radius: 8px;
-      color: rgb(255, 255, 255);
-      width: 68px;
-      height: fit-content;
-      font-size: 10px ;
+      z-index: 20; padding: 10px; background: rgba(0,200,255,.26);
+      border: none; border-radius: 8px; color: white; width: 68px; height: fit-content;
       margin-left: 5px;
     }
-    .toggle-container{
-      display: flex;
-      flex-direction: row;
-      margin-top: 10px;
-    }
-    .control-container {
-      display: flex;
-      flex-direction: column;
-      margin-left: 220px;
-      font-size: 12px;
-      z-index: 999;
-    }
+    .toggle-container{ display: flex; flex-direction: row; margin-top: 10px; }
+    .control-container { display: flex; flex-direction: column; margin-left: 220px; font-size: 12px; z-index: 999; }
 
-    #radar-canvas.enlarged {
-      width: 50%;
-      height: 50%;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 100;
-    }
-
+    #radar-canvas.enlarged { width: 50%; height: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; }
     #close-radar-btn {
-      position: absolute;
-      top: 20%;
-      left: 75%;
-      z-index: 101;
-      background: rgba(255,0,0,0.7);
-      border: none;
-      color: white;
-      font-size: 20px;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: none;
+      position: absolute; top: 20%; left: 75%; z-index: 101;
+      background: rgba(255,0,0,.7); border: none; color: white; font-size: 20px;
+      width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: none;
+    }
+    #close-radar-btn.visible { display: block; }
+
+    #velocidad-label, #motores-prefix, #velocidad-m1-label, #velocidad-m2-label, #Profundidad-label, #Profundidad-tele { color: white; font-size: 10px; font-weight: bold; }
+ 
+    body{
+      margin: 0;
+      background: url('/templates/img/fondo.png') center center no-repeat;
+      background-size: cover; overflow: hidden; font-family: sans-serif;
+    }
+    .info-container{
+      position:absolute; right: 47px; top: 10px; width: fit-content; color: white;
+      display: flex; flex-direction: column; background: rgba(0,0,0,0.212);
+      padding: 10px; border-radius: 5px; font-size: 8px;
+    }
+    .txt-sensor{ margin: 3px 0; }
+    h3{ margin-top: 0; color: rgb(31, 248, 255); }
+    .color-dot {
+      display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+      margin-left: 5px; vertical-align: middle; background-color: gray;
     }
 
-    #close-radar-btn.visible { display: block; }
+    .roldac-txt{ color: white; font-size: 9px; position: absolute; left: 90px !important; top: 32% !important; }
+    #btn-left-Axis { background-color: rgb(1, 202, 202); }
+    #btn-right-Axis{ background-color: rgb(1, 202, 202); }
+
+    .controles-block{ display: none; }
+    .btn-txt{ font-size: 13px; justify-content: center; margin: 0; font-weight: bold; }
+
+    /* Selector radial */
+    .stage{ position:relative; width:100%; height:100%; }
+    .radial{
+      position:absolute; right: calc(-1 * var(--crop)); top:7%; transform:translateY(-50%);
+      width:var(--size); height:var(--size); border-radius:50%;
+      background: radial-gradient(120% 120% at 50% 50%, #00000035 0%, #0a0a0a 55%, #000 100%);
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.306) inset, 0 4px 16px rgba(0,0,0,.3);
+      user-select:none; touch-action:none;
+    }
+    .radial-libre{
+      position:absolute; right: calc(-1 * var(--crop)); top:0.5%; transform:translateY(-50%);
+      width:var(--size); height:var(--size); border-radius:50%;
+      background: radial-gradient(120% 120% at 50% 50%, #00000035 0%, #0a0a0a 55%, #000 100%);
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.306) inset, 0 4px 16px rgba(0,0,0,.3);
+      user-select:none; touch-action:none;
+    }
+    .readout{
+      position:absolute; inset:0; display:grid; place-items:center;
+      color:#e9eefb; font-weight:700; font-size:8px; pointer-events:none; rotate: 90deg;
+    }
+    .items{ position:absolute; inset:0; list-style:none; margin:0; padding:0 }
+    .items li{ position:absolute; left:33%; top:35%; }
+    .btn{
+      width:var(--btn); height:var(--btn); border-radius:50%;
+      display:grid; place-items:center; background: rgba(255,255,255,.06);
+      border:2px solid rgba(255,255,255,.18); color:#fff; cursor:pointer;
+      font-size:8px; font-weight:700;
+      transition:transform .15s, box-shadow .2s, background .2s, border-color .2s;
+    }
+    .btn.active{ background:#0f1e3a; border-color:rgba(46,144,255,.7); box-shadow:0 0 12px rgba(46,144,255,.5); transform:scale(1.08); }
+    .dot{
+      position:absolute; width:8px; height:8px; border-radius:50%; background:var(--accent);
+      box-shadow:0 0 0 3px rgba(46,144,255,.18);
+      left:50%; top:50%; transform-origin:center; transition:transform .18s ease; pointer-events:none;
+    }
+
+    .botonera-controles-libres {
+      display: flex; gap: 12px; width: 290px; justify-content: space-evenly;
+      position: absolute; bottom: -10px; right: calc(50vh + 20px );
+    }
+    .boton-libre {
+      padding: 5px; background: #2e90ff; color: white;
+      font-size: 9px !important; font-weight: 600; border: none; border-radius: 8px;
+      cursor: pointer; transition: all .2s ease; text-align: center;
+      height: 25px !important; width: fit-content !important;
+    }
+    .boton-libre:hover { background: #1c6cd9; transform: translateY(-2px); }
+    .boton-libre:active { transform: translateY(1px); background: #155ab3; }
+
+    .hidden { display: none !important; }
 
     @media (max-width: 950px) {
       #radar-canvas { width: 25%; height: 30%; }
       .control-container { margin-left: 28% !important; }
     }
     @media (min-width: 950px) {
-      #slider-vel{
-      bottom: 50px;
-      left: 30px;
+      #slider-vel{ bottom: 50px; left: 30px; }
+      .vel-txt{ left: 85px; top: -50px; }
+      .dir-inmersion{ margin-bottom: 120px; margin-left: 85px; }
+      .control-container { margin-left: 270px; flex-direction: column-reverse; }
+      p,h3,b,button,div,span{ font-size: 15px !important; }
+      #debug-panel { margin-top: 10px; width: fit-content; }
+      #detection-toggle { width: 118px; }
+      #radar-toggle{ width: 95px; }
+      .roldac-txt { color: white; font-size: 9px; position: absolute; left: 110px !important; top: 23% !important; }
     }
-      .vel-txt{
-        left: 85px;
-        top: -50px;
+    .label-motores{ 
+      display:flex; 
+      gap:6px; 
+      align-items:center; 
+      white-space:nowrap; 
     }
-    .dir-inmersion{
-      margin-bottom: 120px;
-      margin-left: 85px;
+    #velocidad-m1-label::after{ 
+      content:" -"; 
+      margin-left:6px; 
     }
-    .control-container {
-    margin-left: 270px;
-    flex-direction: column-reverse;
-    }
-    p,h3,b,button,div,span{
-      font-size: 15px !important;
-    }
-    #debug-panel {
-    margin-top: 10px;
-    width: fit-content;   
-    }
-    #detection-toggle {
-    width: 118px;   
-    }
-    #radar-toggle{
-      width: 95px;
-    }
-    .roldac-txt {
-    color: white;
-    font-size: 9px;
-    position: absolute;
-    left: 110px !important;
-    top: 23% !important;
-    }
-    #btn-norm{
-    right: 790px !important;
-    bottom: 65% !important;
-  }
-  }
-    #velocidad-label, #Profundidad-label {
-      
-      color: white;
-      font-size: 10px;
+    /* Misma tipografía que el resto de métricas */
+    #servos-prefix, #servo1-label, #servo2-label {
+      color: white; 
+      font-size: 10px; 
       font-weight: bold;
     }
-body{
-    margin: 0;
-  background:  url('/templates/img/fondo.png') center center no-repeat;
-  background-size: cover;
-  overflow: hidden;
-  font-family: sans-serif;
-}
-.info-container{
-  position:absolute;
-  right: 40px;
-  top: 10px;
+
+    .label-servos {
+      display: flex; 
+      gap: 6px; 
+      align-items: 
+      center; 
+      white-space: nowrap;
+    }
+
+    /* Añade el “ -” entre S1 y S2 automáticamente */
+    #servo1-label::after { 
+      content: " -"; 
+      margin-left: 6px; 
+    }
+
+    #btn-norm, #btn-norm2{ margin: 0 10px; }
+/*pid*/
+    .mini-card{
+  background: rgba(0,0,0,0.25);
+  color: #fff;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 9px;
+  margin-top: 10px;
+  position: absolute;
+  left: 453px;
   width: fit-content;
-  color: white;
-  font-size: 12px;
-  display: flex;
-  flex-direction: column;
-  background: rgba(0, 0, 0, 0.212);
-  padding: 10px;
-  border-radius: 5px;
+}
+.mini-card h4{
+  margin: 0 0 6px;
+  color: cyan;
   font-size: 10px;
 }
-.txt-sensor{
-  margin: 3px 0;
+.mini-card .row{
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 172px;
 }
-h3{
-  margin-top: 0;
-  color: rgb(31, 248, 255);
+.mini-card input{
+  width: 60px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  border-radius: 4px;
+  padding: 3px 6px;
 }
-.color-dot {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-left: 8px;
-    vertical-align: middle;
-    background-color: gray; /* color por defecto */
+.mini-card button{
+  padding: 6px 8px;
+  background: rgba(46,144,255,0.5);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 10px;
+  cursor: pointer;
 }
+.pid-container-column{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 55px;
+  margin-top: -33px;
+  margin-left: 15px;
+}
+.mini-card button:active{ transform: translateY(1px); }
 
-#btn-axis{
-  position: absolute;
-  right: 150px;
-  bottom: 48px;
-  background-color: rgb(1, 202, 202);
-}
-#btn-center-Axis{
-  margin: 0 10px;
-}
-.roldac-txt{
-  color: white;
-  font-size: 9px;
-  position: absolute;
-  left: calc(12.5% - 10px);
-  top: 32%;
-}
-#btn-left-Axis {
-  background-color: rgb(1, 202, 202);
-}
-#btn-right-Axis{
-  background-color: rgb(1, 202, 202);
-}
-#btn-axis.giro-eje-select{
-  background-color: rgb(0, 144, 144);
-}
-
-.controles-block{
-  display: none;
-}
-#btn-norm{
-  position: absolute;
-  right: 440%;
-  bottom: 55%;
-  
-}
-.cooldown-active {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
   </style>
 </head>
 <body>
   <div id="contenedor">
-    <img id="video" src="{{ url_for('video_feed', detection=True) }}" alt="Video detección">
+    <img id="video" src="{{ url_for('video_feed') }}" alt="Video detección" />
 
     <button id="fullscreen-btn" title="Pantalla completa">⛶</button>
     <button id="exit-fullscreen-btn" title="Salir pantalla completa">⤬</button>
@@ -444,425 +345,257 @@ h3{
     <div class="control-container">
       <div class="toggle-container">
         <button id="detection-toggle">Detección: ON</button>
-        <button id="radar-toggle" >Radar: ON</button>
+        <button id="radar-toggle">Radar: ON</button>
         <button id="btn-reconectar">⥀</button>
       </div>
+
       <div id="debug-panel">
-        <!--<h3>Estado del Sistema</h3>-->
         <div><b>Modo detección: </b><span id="detection-status">ACTIVADO</span></div>
-        <!--<div><b>FPS: </b><span id="fps-counter">0</span></div>!-->
         <div><b>Radar: </b><span id="radar-status">Conectando...</span></div>
         <div id="velocidad-label">Velocidad: 0%</div>
-        <div id="Profundidad-label">Inmersión: Detenido</div>
+        <div class="label-motores">
+          <div id="motores-prefix"  class="vel-mot hidden">Velocidad: </div>
+          <div id="velocidad-m1-label" class="vel-mot hidden">M1: 0% </div>
+          <div id="velocidad-m2-label" class="vel-mot hidden">M2: 0%</div>
+        </div>
+        <div class="label-servos">
+          <div id="servos-prefix" class="servo-lbl hidden">Servos:</div>
+          <div id="servo1-label" class="servo-lbl hidden">S1: 0°</div>
+          <div id="servo2-label" class="servo-lbl hidden">S2: 0°</div>
+        </div>
+        <div id="Profundidad-label">Profundidad objetivo: 0 cm</div>
+        <div id="Profundidad-tele">prof=0 | obj=0 | err=0 | u=0 | estado=neutro</div>
       </div>
+        
+      <!-- === Herramientas de inmersión: Zero + PID === -->
+<div id="immersion-tools" class="mini-card controles-block">
+  <h4>Inmersión</h4>
+  <div class="row">
+    <button id="btn-zero">Zero @ surface</button>
+    <span id="zero-status" style="margin-left:8px;opacity:.85"></span>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <label for="pid-kp">Kp</label>
+    <input id="pid-kp" type="number" step="0.01" value="2.00">
+    
+    <div class="pid-container-column">
+      <div>
+        <label for="pid-ki">Ki</label>
+        <input id="pid-ki" type="number" step="0.001" value="0.08">
+      </div>
+      <div>
+        <label for="pid-kd">Kd</label>
+        <input id="pid-kd" type="number" step="0.01" value="0.80">
+      </div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <button id="pid-apply">Aplicar PID</button>
+    <button id="pid-calm">Calm</button>
+    <button id="pid-choppy">Choppy</button>
+    <span id="pid-status" style="margin-left:8px;opacity:.85"></span>
+  </div>
+</div>
+
 
       <canvas id="radar-canvas"></canvas>
-      <p class="roldac-txt">Roldac v1</p>
+      <p class="roldac-txt">Roldac v1.2</p>
       <button id="close-radar-btn" title="Cerrar radar">✕</button>
-
-     
     </div>
 
     <div class="info-container">
-      <h3>Info. del agua</h3> 
-      <p class="txt-sensor"><b>Temperatura: </b><span id="sensor-temperatura">0</span> °C
-        <span id="color-temp" class="color-dot"></span>
-      </p>
-      <p class="txt-sensor"><b>pH: </b><span id="sensor-pH">0</span>
-        <span id="color-ph" class="color-dot"></span>
-      </p>
-      <p class="txt-sensor"><b>Turbidez: </b><span id="sensor-turbidez">0</span> NTU
-        <span id="color-turb" class="color-dot"></span>
-      </p>
-      <p class="txt-sensor"><b>Total de sólidos: <br style="margin-top: 5px;"> disueltos: </b><span id="sensor-tds">0</span> PPM
-        <span id="color-tds" class="color-dot"></span>
-      </p>
+      <h3>Info. del agua</h3>
+      <p class="txt-sensor"><b>Temperatura: </b><span id="sensor-temperatura">0</span> °C <span id="color-temp" class="color-dot"></span></p>
+      <p class="txt-sensor"><b>pH: </b><span id="sensor-pH">0</span> <span id="color-ph" class="color-dot"></span></p>
+      <p class="txt-sensor"><b>Turbidez: </b><span id="sensor-turbidez">0</span> NTU <span id="color-turb" class="color-dot"></span></p>
+      <p class="txt-sensor"><b>Total de sólidos:<br>disueltos: </b><span id="sensor-tds">0</span> PPM <span id="color-tds" class="color-dot"></span></p>
     </div>
 
     <div class="slider-container">
       <div>
-        <input
-          type="range"
-          class="slider-vertical"
-          id="slider-vel"
-          min="0"
-          max="100"
-          value="0"
-          orient="vertical"
-        />
+        <input type="range" class="slider-vertical" id="slider-vel" min="0" max="100" value="0" orient="vertical" />
+        <p class="vel-txt">Velocidad</p>
       </div>
-      <div class="dir-inmersion">
-        <button id="btn-subir">▲</button>
-        <button id="btn-neutro">⬤</button>
-        <button id="btn-bajar">▼</button>
+      <div>
+        <input type="range" class="slider-vertical" id="slider-prof" min="0" max="200" value="0" orient="vertical" />
+        <p class="prof-txt">Profundidad</p>
       </div>
     </div>
-    
+
+    <div class="stage">
+      <div class="radial menu-controles" id="menuRadial">
+        <div class="readout" id="readout">Normal</div>
+        <ul class="items" id="items"></ul>
+        <div class="dot" id="dot"></div>
+      </div>
+    </div>
+
     <div id="joystick-dir" class="joystick">
-      <button id="btn-forward">▲</button>
+      <button id="btn-forward"><p class="btn-txt">▲<br>F</p></button>
       <div class="dir-central control-normal">
-        <button id="btn-left">◀</button>
-        <button id="btn-center">△</button>
-        <button id="btn-right">▶</button>
+        <button id="btn-left"><p class="btn-txt">◀L</p></button>
+        <button id="btn-norm"><p class="btn-txt">⇈<br>2F</p></button>
+        <button id="btn-right"><p class="btn-txt">R▶</p></button>
       </div>
       <div class="dir-central control-eje controles-block">
-        <button id="btn-left-Axis">◀</button>
-        <button id="btn-center-Axis">△</button>
-        <button id="btn-right-Axis">▶</button>
+        <button id="btn-left-Axis"><p class="btn-txt">⟲L</p></button>
+        <button id="btn-norm2"><p class="btn-txt">⇈<br>2F</p></button>
+        <button id="btn-right-Axis" class="btn-txt"><p class="btn-txt">R⟳</p></button>
       </div>
-      <button id="btn-axis">↺</button>
-      <button id="btn-norm">⬤</button>
-      <button id="btn-backward">▼</button>
+
+      <div class="control-libre controles-block" id="cont-lib">
+        <div>
+          <input type="range" class="slider-vertical slider-vertical-control" id="slider-servo1" min="0" max="180" value="0" orient="vertical"/>
+          <p class="dirM1-txt">Dirección M1</p>
+        </div>
+        <div>
+          <input type="range" class="slider-vertical slider-vertical-control" id="slider-motor1" min="0" max="100" value="0" orient="vertical"/>
+          <p class="M1-txt">Motor 1</p>
+        </div>
+        <div>
+          <input type="range" class="slider-vertical slider-vertical-control" id="slider-motor2" min="0" max="100" value="0" orient="vertical"/>
+          <p class="M2-txt">Motor 2</p>
+        </div>
+        <div>
+          <input type="range" class="slider-vertical slider-vertical-control" id="slider-servo2" min="0" max="180" value="0" orient="vertical"/>
+          <p class="dirM2-txt">Dirección M2</p>
+        </div>
+      </div>
+
+      <button id="btn-backward"><p class="btn-txt">B<br>▼</p></button>
+
+      <div class="botonera-controles-libres">
+        <button class="boton-libre controles-block serv0">Servos 0°</button>
+        <button class="boton-libre controles-block serv90">Servos 90°</button>
+        <button class="boton-libre controles-block serv180">Servos 180°</button>
+        <button class="boton-libre controles-block servDer">Der</button>
+        <button class="boton-libre controles-block servIzq">Izq</button>
+        <button class="boton-libre controles-block velIgual">Vel</button>
+      </div>
     </div>
   </div>
 
   <script>
-    // Variables globales para el cooldown
-    let cooldownActivo = false;
-    const COOLDOWN_TIME = 500; // 500ms de cooldown
-    
-    // Función para manejar el cooldown
-    function activarCooldown() {
-      if (cooldownActivo) return false;
-      
-      cooldownActivo = true;
-      
-      // Deshabilitar visualmente los botones de servo
-      const botonesServo = [
-        document.getElementById("btn-forward"),
-        document.getElementById("btn-backward"),
-        document.getElementById("btn-center"),
-        document.getElementById("btn-center-Axis"),
-        document.getElementById("btn-left-Axis"),
-        document.getElementById("btn-right-Axis"),
-        document.getElementById("btn-subir"),
-        document.getElementById("btn-bajar"),
-        document.getElementById("btn-neutro")
-      ];
-      
-      botonesServo.forEach(boton => {
-        boton.classList.add('cooldown-active');
-        boton.disabled = true;
-      });
-      
-      setTimeout(() => {
-        cooldownActivo = false;
-        botonesServo.forEach(boton => {
-          boton.classList.remove('cooldown-active');
-          boton.disabled = false;
-        });
-      }, COOLDOWN_TIME);
-      
-      return true;
-    }
+    // ================= Helpers =================
+    const $ = s => document.querySelector(s);
+    function debounce(fn, wait=120){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; }
 
-    const videoElement = document.getElementById('video');
+    // Base refs
+    const videoElement = $('#video');
+    const toggleBtn = $('#detection-toggle');
+    const detectionStatus = $('#detection-status');
+    const radarToggle = $('#radar-toggle');
+    const radarStatus = $('#radar-status');
+    const fullscreenBtn = $('#fullscreen-btn');
+    const exitFullscreenBtn = $('#exit-fullscreen-btn');
+    const btnReconectar = $('#btn-reconectar');
 
-    videoElement.onerror = function() {
-      console.warn("No se pudo cargar el video, mostrando fondo");
-      videoElement.style.display = 'none';
-    };
+    const velocidadLabel = $('#velocidad-label');
+    const profundidadLabel = $('#Profundidad-label');
+    const profundidadTele = $('#Profundidad-tele');
 
-    const toggleBtn = document.getElementById("detection-toggle");
-    const detectionStatus = document.getElementById("detection-status");
-    const radarToggle = document.getElementById("radar-toggle");
-    const radarStatus = document.getElementById("radar-status");
-    const fullscreenBtn = document.getElementById("fullscreen-btn");
-    const exitFullscreenBtn = document.getElementById("exit-fullscreen-btn");
-    const velocidadLabel = document.getElementById("velocidad-label");
-    const profundidadLabel = document.getElementById("Profundidad-label");
-    const sliderVel = document.getElementById("slider-vel");
+    const sliderVel = $('#slider-vel');
+    const sliderProf = $('#slider-prof');
+    const sliderServo1 = $('#slider-servo1');
+    const sliderServo2 = $('#slider-servo2');
+    const sliderM1 = $('#slider-motor1');
+    const sliderM2 = $('#slider-motor2');
+    const velM1Label = $('#velocidad-m1-label');
+    const velM2Label = $('#velocidad-m2-label');
+    const servosPrefix = document.querySelector('#servos-prefix');
+    const servo1Label  = document.querySelector('#servo1-label');
+    const servo2Label  = document.querySelector('#servo2-label');
+    const pidCard = $('.mini-card');
 
+    const btnLeft = $('#btn-left'), btnRight = $('#btn-right'),
+          btnForward = $('#btn-forward'), btnBackward = $('#btn-backward'),
+          btnNorm = $('#btn-norm'),
+          btnNorm2 = $('#btn-norm2'), ejeDer = $('#btn-right-Axis'), ejeIzq = $('#btn-left-Axis');
+
+    const controlNormal = $('.control-normal'), controlEje = $('.control-eje'), controlLibre = $('.control-libre');
+    const joystick = $('.joystick'), serv0 = $('.serv0'), serv90 = $('.serv90'), serv180 = $('.serv180'),
+          servDer = $('.servDer'), servIzq = $('.servIzq'), velIgual = $('.velIgual'), menuControles = $('.menu-controles');
+
+    // Video fallback
+    videoElement.onerror = ()=>{ console.warn("No se pudo cargar el video"); videoElement.style.display='none'; };
+
+    // Labels helpers
+    function setVelocidadLabel(v){ velocidadLabel.textContent = `Velocidad: ${v}%`; }
+    function setProfLabel(cm){ profundidadLabel.textContent = `Profundidad objetivo: ${cm} cm`; }
+    function setM1Label(v){ if (velM1Label) velM1Label.textContent = `M1: ${v}%`; }
+    function setM2Label(v){ if (velM2Label) velM2Label.textContent = `M2: ${v}%`; }
+    function setS1Label(deg){ if (servo1Label) servo1Label.textContent = `S1: ${deg}°`; }
+    function setS2Label(deg){ if (servo2Label) servo2Label.textContent = `S2: ${deg}°`; }
+function updateServosUI(){
+  const s1 = sliderServo1 ? parseInt(sliderServo1.value) : 0;
+  const s2 = sliderServo2 ? parseInt(sliderServo2.value) : 0;
+  setS1Label(s1); setS2Label(s2);
+}
+    // ================= Fullscreen =================
     fullscreenBtn.addEventListener("click", () => {
       const elem = document.documentElement;
       if (elem.requestFullscreen) elem.requestFullscreen();
-      fullscreenBtn.style.display = "none";
-      exitFullscreenBtn.style.display = "inline";
+    });
+    exitFullscreenBtn.addEventListener("click", () => { if (document.exitFullscreen) document.exitFullscreen(); });
+    document.addEventListener('fullscreenchange', () => {
+      const fs = !!document.fullscreenElement;
+      fullscreenBtn.style.display = fs ? "none" : "inline";
+      exitFullscreenBtn.style.display = fs ? "inline" : "none";
     });
 
-    exitFullscreenBtn.addEventListener("click", () => {
-      if (document.exitFullscreen) document.exitFullscreen();
-      exitFullscreenBtn.style.display = "none";
-      fullscreenBtn.style.display = "inline";
+    // ================= Reconexión =================
+    btnReconectar.addEventListener("click", async () => {
+      try{
+        const r = await fetch("/reconectar_todos", {method:"POST"});
+        const j = await r.json();
+        alert(`status=${j.status}\nmotores=${j.motores}\nservos_depth=${j.servos_depth}\nsensores=${j.sensores}\nradar=${j.radar}\nmsg=${j.msg}`);
+      }catch(e){ alert("Error al reconectar: "+e.message); }
     });
 
-    document.getElementById("btn-reconectar").addEventListener("click", () => {
-      fetch("/reconectar_todos")
-          .then(r => r.json())
-          .then(data => {
-              let mensajes = "";
-              for (let [arduino, res] of Object.entries(data)) {
-                  mensajes += `${arduino}: ${res.mensaje}\n`;
-              }
-              alert(mensajes);
-          })
-          .catch(err => alert("Error en el servidor"));
+    // ================= Detección =================
+    toggleBtn.addEventListener("click", async () => {
+      const r = await fetch('/toggle_detection', { method: 'POST' });
+      const data = await r.json();
+      toggleBtn.textContent = data.detection ? "Detección: ON" : "Detección: OFF";
+      toggleBtn.style.background = data.detection ? "rgba(0,255,0,0.5)" : "rgba(255,0,0,0.5)";
+      detectionStatus.textContent = data.detection ? "ACTIVADO" : "DESACTIVADO";
+      detectionStatus.className = data.detection ? "" : "off";
     });
 
-    toggleBtn.addEventListener("click", () => {
-      fetch('/toggle_detection', { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-          toggleBtn.textContent = data.detection ? "Detección: ON" : "Detección: OFF";
-          toggleBtn.style.background = data.detection ? "rgba(0,255,0,0.5)" : "rgba(255,0,0,0.5)";
-          detectionStatus.textContent = data.detection ? "ACTIVADO" : "DESACTIVADO";
-          detectionStatus.className = data.detection ? "" : "off";
-        });
-    });
+    // ================= Radar =================
 
-    radarToggle.addEventListener("click", () => {
-      const action = radarToggle.textContent.includes("ON") ? "stop" : "start";
-      fetch(`/${action}_radar`, { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-          radarToggle.textContent = action === "stop" ? "Radar: OFF" : "Radar: ON";
-          radarToggle.style.background = action === "stop" ? "rgba(255,100,0,0.5)" : "rgba(0,200,255,0.5)";
-          radarStatus.textContent = data.status || "Conectado";
-        });
-    });
+    (async function syncRadarUi(){
+  try{
+    const d = await fetch('/radar_data').then(r=>r.json());
+    const on = d.status === "scanning" || d.status === "receiving";
+    radarToggle.textContent = on ? "Radar: ON" : "Radar: OFF";
+    radarToggle.style.background = on ? "rgba(0,200,255,0.5)" : "rgba(255,100,0,0.5)";
+    radarStatus.textContent = on ? "Escaneando" : "Apagado";
+  }catch{}
+})();
 
-    const btnSubir = document.getElementById("btn-subir");
-    const btnBajar = document.getElementById("btn-bajar");
-    const joystickDir = document.getElementById("joystick-dir");
-    const debugPanel = document.getElementById("debug-panel");
-    const fpsCounterEl = document.getElementById("fps-counter");
+    radarToggle.addEventListener("click", async () => {
+  const isOn = radarToggle.textContent.includes("ON");
+  const action = isOn ? "stop" : "start";
+
+  try {
+    const r = await fetch(`/${action}_radar`, { method: 'POST' });
+    const data = await r.json();
+
+    const on = data.status === "scanning" || data.status === "receiving";
+    radarToggle.textContent = on ? "Radar: ON" : "Radar: OFF";
+    radarToggle.style.background = on ? "rgba(0,200,255,0.5)" : "rgba(255,100,0,0.5)";
+    radarStatus.textContent = on ? "Escaneando" : "Apagado";
+  } catch (e) {
+    console.error(e);
+  }
+});
+
+
     const canvas = document.getElementById("radar-canvas");
     const ctx = canvas.getContext("2d");
     const closeRadarBtn = document.getElementById("close-radar-btn");
-
-    const btnLeft = document.getElementById("btn-left");
-    const btnRight = document.getElementById("btn-right");
-    const btnForward = document.getElementById("btn-forward");
-    const btnBackward = document.getElementById("btn-backward");
-    const btnCenter = document.getElementById("btn-center");
-    const btnCenterAxis = document.getElementById("btn-center-Axis");
-    const btnNeutro = document.getElementById("btn-neutro");
-    const btnNorm = document.getElementById("btn-norm");
-    const btnAxis = document.getElementById("btn-axis");
-    const ejeDer = document.getElementById("btn-right-Axis");
-    const ejeIzq = document.getElementById("btn-left-Axis");
-    const controlNormal = document.querySelector(".control-normal");
-    const controlEje = document.querySelector(".control-eje");
-
-    // Variables globales de control
-    let velocidad = 0;
-    let direccion = 50; // 0 a 100, 50 centro
-    let enviando = false;
-
-    // Enviar velocidad y dirección al backend
-    function enviarDatos() {
-      if (enviando) return;
-      enviando = true;
-      fetch("/update_motors", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ velocidad, direccion })
-      }).then(() => { enviando = false; });
-    }
-
-    // Control de profundidad con cooldown
-    function controlarProfundidad(accion) {
-      
-      // Actualizar interfaz
-      if (accion === 'subir') {
-        profundidadLabel.textContent = 'Inmersión: subiendo';
-        btnSubir.style.background = "rgba(33, 199, 0, 0.8)";
-        btnBajar.style.background = "rgba(43, 255, 0, 0.8)";
-      } else if (accion === 'bajar') {
-        profundidadLabel.textContent = 'Inmersión: bajando';
-        btnBajar.style.background = "rgba(33, 199, 0, 0.8)";
-        btnSubir.style.background = "rgba(43, 255, 0, 0.8)";
-      } else {
-        profundidadLabel.textContent = 'Inmersión: neutro';
-        btnSubir.style.background = "rgba(43, 255, 0, 0.8)";
-        btnBajar.style.background = "rgba(43, 255, 0, 0.8)";
-      }
-
-      // Enviar comando al backend
-      fetch("/control_profundidad", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accion })
-      }).catch(console.error);
-    }
-
-    btnSubir.addEventListener("click", () => {
-      direccion = 50;
-      velocidad = 0;
-      sliderVel.value = 0;
-      controlarProfundidad("subir");
-      enviarDatos();
-    });
-    btnBajar.addEventListener("click", () => {
-      direccion = 50;
-      velocidad = 0;
-      sliderVel.value = 0;
-      controlarProfundidad("bajar");
-      enviarDatos();
-    });
-    btnNeutro.addEventListener("click", () => {
-      direccion = 50;
-      velocidad = 0;
-      sliderVel.value = 0;
-      controlarProfundidad("neutro");
-      enviarDatos();
-    });
-
-    // Enviar comando a servos con cooldown
-    function enviarServoDireccion(cmd) {
-      if (!activarCooldown()) return;
-      
-      fetch("/control_servo", { 
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cmd })
-      }).catch(console.error);
-    }
-
-    sliderVel.addEventListener("input", (e) => {
-      velocidad = Math.max(parseInt(e.target.value), 0);
-      velocidadLabel.textContent = `Velocidad: ${velocidad}%`;
-      enviarDatos();
-    });
-
-    // Cambiar a giro sobre propio eje
-    btnAxis.addEventListener("click", () => {
-      direccion = 50;
-      velocidad = 0;
-      sliderVel.value = 0;
-      velocidadLabel.textContent = `Velocidad: 0%`;
-      btnAxis.classList.toggle("giro-eje-select");
-      
-      if(controlNormal.classList.contains("controles-block")){
-        controlNormal.classList.remove("controles-block");
-      } else{
-        controlNormal.classList.add("controles-block");
-      }
-      if(controlEje.classList.contains("controles-block")){
-        controlEje.classList.remove("controles-block");
-      } else{
-        controlEje.classList.add("controles-block");
-      }
-      
-      enviarDatos();
-    });
-
-    // Giro sobre eje - derecho
-    ejeDer.addEventListener("click", () => {
-      direccion = 50;
-      velocidad = 0;
-      sliderVel.value = 0;
-      velocidadLabel.textContent = `Velocidad: 0%`;
-      ejeIzq.style.background = "rgb(1, 202, 202)";
-      ejeDer.style.background = "rgb(0, 144, 144)";
-      enviarDatos();
-      enviarServoDireccion("der");
-    });
-    
-    // Giro sobre eje - izq
-    ejeIzq.addEventListener("click", () => {
-      direccion = 50;
-      velocidad = 0;
-      sliderVel.value = 0;
-      velocidadLabel.textContent = `Velocidad: 0%`;      
-      ejeIzq.style.background = "rgb(0, 144, 144)";
-      ejeDer.style.background = "rgb(1, 202, 202)";
-      enviarDatos();
-      enviarServoDireccion("izq");
-    });
-
-    // Manejo de joystick de dirección para servos y dirección general
-    btnNorm.addEventListener("click", () => {
-      direccion = 50;
-      btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
-      btnRight.style.background = "rgba(43, 255, 0, 0.8)";
-      btnForward.style.background = "rgba(43, 255, 0, 0.8)";
-      btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
-      btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
-      ejeIzq.style.background = "rgb(1, 202, 202)";
-      ejeDer.style.background = "rgb(1, 202, 202)";
-      enviarDatos();
-    });
-    
-    btnLeft.addEventListener("click", () => {
-      direccion = 25;
-      btnLeft.style.background = "rgba(33, 199, 0, 0.8)";
-      btnRight.style.background = "rgba(43, 255, 0, 0.8)";
-      btnForward.style.background = "rgba(43, 255, 0, 0.8)";
-      btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
-      btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
-      enviarDatos();
-    });
-
-    btnRight.addEventListener("click", () => {
-      direccion = 75;
-      btnRight.style.background = "rgba(33, 199, 0, 0.8)";
-      btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
-      btnForward.style.background = "rgba(43, 255, 0, 0.8)";
-      btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
-      btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
-      enviarDatos();
-    });
-
-    btnForward.addEventListener("click", () => {
-      direccion = 50;
-      velocidad = 0;
-      sliderVel.value = 0;
-      velocidadLabel.textContent = `Velocidad: 0%`;      
-      btnForward.style.background = "rgba(33, 199, 0, 0.8)";
-      btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
-      btnRight.style.background = "rgba(43, 255, 0, 0.8)";
-      btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
-      btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
-      enviarDatos();
-      enviarServoDireccion("frw");
-    });
-
-    btnBackward.addEventListener("click", () => {
-      direccion = 50; 
-      velocidad = 0;
-      sliderVel.value = 0;
-      velocidadLabel.textContent = `Velocidad: 0%`;      
-      btnBackward.style.background = "rgba(33, 199, 0, 0.8)";
-      btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
-      btnRight.style.background = "rgba(43, 255, 0, 0.8)";
-      btnForward.style.background = "rgba(43, 255, 0, 0.8)";
-      btnCenter.style.background = "rgba(43, 255, 0, 0.8)";
-      enviarDatos();
-      enviarServoDireccion("bkw");
-    });
-
-    btnCenter.addEventListener("click", () => {
-      direccion = 50;
-      velocidad = 0;
-      sliderVel.value = 0;
-      velocidadLabel.textContent = `Velocidad: 0%`;      
-      btnCenter.style.background = "rgba(33, 199, 0, 0.8)";
-      btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
-      btnRight.style.background = "rgba(43, 255, 0, 0.8)";
-      btnForward.style.background = "rgba(43, 255, 0, 0.8)";
-      btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
-      enviarDatos();
-      enviarServoDireccion("up");
-    });
-    btnCenterAxis.addEventListener("click", () => {
-      direccion = 50;
-      velocidad = 0;
-      sliderVel.value = 0;
-      velocidadLabel.textContent = `Velocidad: 0%`;      
-      btnCenter.style.background = "rgba(33, 199, 0, 0.8)";
-      btnLeft.style.background = "rgba(43, 255, 0, 0.8)";
-      btnRight.style.background = "rgba(43, 255, 0, 0.8)";
-      btnForward.style.background = "rgba(43, 255, 0, 0.8)";
-      btnBackward.style.background = "rgba(43, 255, 0, 0.8)";
-      enviarDatos();
-      enviarServoDireccion("up");
-    });
-
-    // Radar
-    canvas.width = 360;
-    canvas.height = 180;
-
+    canvas.width = 360; canvas.height = 180;
     const radarHistory = new Array(181).fill(0);
 
     function drawRadar() {
@@ -876,50 +609,33 @@ h3{
 
       ctx.strokeStyle = "lime";
       for (let r = radius / 4; r <= radius; r += radius / 4) {
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, r, Math.PI, 0);
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(centerX, centerY, r, Math.PI, 0); ctx.stroke();
       }
-
       for (let angle = 0; angle <= 180; angle += 15) {
         const rad = angle * Math.PI / 180;
         const x = centerX + Math.cos(rad) * radius;
         const y = centerY - Math.sin(rad) * radius;
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.lineTo(x, y);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(x, y); ctx.stroke();
       }
-
       for (let ang = 0; ang <= 180; ang++) {
         const dist = radarHistory[ang];
         if (dist > 0 && dist <= maxDistance) {
           const rad = ang * Math.PI / 180;
           const x = centerX + Math.cos(rad) * (dist / maxDistance) * radius;
           const y = centerY - Math.sin(rad) * (dist / maxDistance) * radius;
-          ctx.beginPath();
-          ctx.moveTo(centerX, centerY);
-          ctx.lineTo(x, y);
-          ctx.strokeStyle = "red";
-          ctx.lineWidth = 1;
-          ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(x, y);
+          ctx.strokeStyle = "red"; ctx.lineWidth = 1; ctx.stroke();
         }
       }
-
       const currentAngle = radarHistory.lastAngle || 0;
       const rad = currentAngle * Math.PI / 180;
       const x = centerX + Math.cos(rad) * radius;
       const y = centerY - Math.sin(rad) * radius;
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.lineTo(x, y);
-      ctx.strokeStyle = "yellow";
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(x, y);
+      ctx.strokeStyle = "yellow"; ctx.lineWidth = 2; ctx.stroke();
 
       const distActual = radarHistory[currentAngle] || 0;
-      ctx.fillStyle = "white";
-      ctx.font = "bold 12px Arial";
+      ctx.fillStyle = "white"; ctx.font = "bold 12px Arial";
       ctx.fillText(`Ángulo: ${currentAngle}°`, 10, 20);
       ctx.fillText(`Distancia: ${distActual.toFixed(1)} cm`, 10, 35);
     }
@@ -928,66 +644,417 @@ h3{
       fetch("/radar_data")
         .then(res => res.json())
         .then(data => {
-          const angle = data.angulo;
-          const distance = Math.min(data.distancia, 200);
-          radarHistory[angle] = distance;
-          radarHistory.lastAngle = angle;
-          drawRadar();
-        })
-        .catch(console.error);
-    }
+  const angle = Math.round(Number(data.angulo) || 0);
+  const distance = Math.min(Number(data.distancia) || 0, 200);
+  radarHistory[angle] = distance;
+  radarHistory.lastAngle = angle;
+  drawRadar();
+})
 
-    setInterval(actualizarRadar, 100);
+        .catch(()=>{});
+    }
+    setInterval(actualizarRadar, 120);
 
     canvas.addEventListener("click", () => {
       canvas.classList.add("enlarged");
       closeRadarBtn.classList.add("visible");
     });
-
     closeRadarBtn.addEventListener("click", () => {
       canvas.classList.remove("enlarged");
       closeRadarBtn.classList.remove("visible");
     });
 
-    document.addEventListener("keydown", (e) => {
-      if (e.key.toLowerCase() === "d") {
-        debugPanel.style.display = debugPanel.style.display === "none" ? "block" : "none";
+    // ================= Motores (M1/M2) =================
+    /*let enviando = false;
+    function showMotorLabels(show){
+      if (!velM1Label || !velM2Label) return;
+      velM1Label.classList.toggle('hidden', !show);
+      velM2Label.classList.toggle('hidden', !show);
+    }*/
+    function showMotorLabels(show){
+  document.querySelectorAll('.label-motores .vel-mot')
+    .forEach(el => el.classList.toggle('hidden', !show));
+}
+function showServoLabels(show){
+  document.querySelectorAll('.label-servos .servo-lbl')
+    .forEach(el => el.classList.toggle('hidden', !show));
+}
+
+
+    const sendMotors = debounce(async function(){
+      if (!sliderM1 || !sliderM2) return;
+      const body = {
+        velocidad1: Number(sliderM1.value),
+        velocidad2: Number(sliderM2.value)
+      };
+      try{
+        const r = await fetch('/update_motors_dual', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+        });
+        if(!r.ok) throw new Error('HTTP '+r.status);
+      }catch(e){ console.error('motors', e); }
+    }, 120);
+
+    function syncMotorsFromMaster(v){
+      if (sliderM1) sliderM1.value = v;
+      if (sliderM2) sliderM2.value = v;
+      setM1Label(v); setM2Label(v);
+      sendMotors();
+    }
+    function syncMasterFromMotors(){
+      const v1 = sliderM1 ? parseInt(sliderM1.value) : 0;
+      const v2 = sliderM2 ? parseInt(sliderM2.value) : 0;
+      const vmax = Math.max(v1, v2);
+      if (parseInt(sliderVel.value) !== vmax) {
+        sliderVel.value = vmax; setVelocidadLabel(vmax);
       }
+      sendMotors();
+    }
+
+    sliderVel.addEventListener("input", (e) => {
+      const v = Math.max(parseInt(e.target.value), 0);
+      setVelocidadLabel(v);
+      syncMotorsFromMaster(v);
+    });
+    if (sliderM1) sliderM1.addEventListener("input", (e)=>{ const v = Math.max(parseInt(e.target.value),0); setM1Label(v); syncMasterFromMotors(); });
+    if (sliderM2) sliderM2.addEventListener("input", (e)=>{ const v = Math.max(parseInt(e.target.value),0); setM2Label(v); syncMasterFromMotors(); });
+
+    if (velIgual) {
+      velIgual.addEventListener("click", () => {
+        const v1 = sliderM1 ? parseInt(sliderM1.value) : 0;
+        const v2 = sliderM2 ? parseInt(sliderM2.value) : 0;
+        const vmax = Math.max(v1, v2);
+        if (sliderM1) sliderM1.value = vmax;
+        if (sliderM2) sliderM2.value = vmax;
+        setM1Label(vmax); setM2Label(vmax);
+        if (parseInt(sliderVel.value) !== vmax) {
+          sliderVel.value = vmax; setVelocidadLabel(vmax);
+        }
+        sendMotors();
+      });
+    }
+// ================= Profundidad (PID) =================
+
+// ===== Zero @ surface =====
+const btnZero = document.getElementById('btn-zero');
+const zeroStatus = document.getElementById('zero-status');
+
+btnZero?.addEventListener('click', async ()=>{
+  btnZero.disabled = true;
+  zeroStatus.textContent = 'Zero…';
+  try{
+    const r = await fetch('/depth_zero', {method:'POST'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+
+    // Deja SP en 0 en la UI y fuerza un poll para ver la telemetría pos-zero
+    if (sliderProf){ sliderProf.value = 0; setProfLabel(0); }
+    setTimeout(()=>{ zeroStatus.textContent = 'OK'; }, 50);
+  }catch(e){
+    console.error(e);
+    zeroStatus.textContent = 'Error';
+  }finally{
+    setTimeout(()=>{ zeroStatus.textContent = ''; }, 1500);
+    btnZero.disabled = false;
+  }
+});
+
+// ===== PID tune (/pid_tune) =====
+const pidKp = document.getElementById('pid-kp');
+const pidKi = document.getElementById('pid-ki');
+const pidKd = document.getElementById('pid-kd');
+const pidApplyBtn = document.getElementById('pid-apply');
+const pidCalmBtn  = document.getElementById('pid-calm');
+const pidChopBtn  = document.getElementById('pid-choppy');
+const pidStatus   = document.getElementById('pid-status');
+
+async function applyPid(kp, ki, kd){
+  pidApplyBtn.disabled = true;
+  pidStatus.textContent = 'Aplicando…';
+  try{
+    const r = await fetch('/pid_tune', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ kp: Number(kp), ki: Number(ki), kd: Number(kd) })
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    pidStatus.textContent = `OK (Kp=${Number(kp)}, Ki=${Number(ki)}, Kd=${Number(kd)})`;
+  }catch(e){
+    console.error(e);
+    pidStatus.textContent = 'Error';
+  }finally{
+    pidApplyBtn.disabled = false;
+    setTimeout(()=>{ pidStatus.textContent=''; }, 2000);
+  }
+}
+
+pidApplyBtn?.addEventListener('click', ()=>{
+  applyPid(pidKp.value, pidKi.value, pidKd.value);
+});
+pidCalmBtn?.addEventListener('click', ()=>{
+  // Perfil estable (agua calma)
+  pidKp.value = 2.00; pidKi.value = 0.08; pidKd.value = 0.80;
+  applyPid(pidKp.value, pidKi.value, pidKd.value);
+});
+pidChopBtn?.addEventListener('click', ()=>{
+  // Perfil con más derivativa para oleaje
+  pidKp.value = 1.60; pidKi.value = 0.06; pidKd.value = 1.10;
+  applyPid(pidKp.value, pidKi.value, pidKd.value);
+});
+
+
+
+let lastDepth = null;
+let lastSentSP = null;
+let pollOn = true;
+
+// Pausa el polling si la pestaña está oculta (ahorra CPU/red)
+document.addEventListener('visibilitychange', () => {
+  pollOn = !document.hidden;
+});
+
+async function pollDepth(){
+  try{
+    const d = await fetch('/depth_status').then(r=>r.json());
+    lastDepth = d;
+    const prof = Number(d.profundidad_cm ?? 0).toFixed(1);
+    const obj  = Number(d.objetivo_cm   ?? 0).toFixed(0);
+    const err  = Number(d.error_cm      ?? 0).toFixed(1);
+    const u    = Number(d.u             ?? 0).toFixed(1);
+    const est  = d.estado_bombas || 'hold';
+
+    profundidadTele.textContent = `prof=${prof} cm | obj=${obj} cm | err=${err} cm | u=${u} | estado=${est}`;
+
+    // (Opcional) si el SP que muestra el slider no coincide con el del backend, sincroniza UI
+    const spBackend = parseInt(d.objetivo_cm || 0);
+    if (Math.abs(spBackend - parseInt(sliderProf.value)) > 0) {
+      sliderProf.value = Math.min(Math.max(spBackend, parseInt(sliderProf.min)), parseInt(sliderProf.max));
+      setProfLabel(sliderProf.value);
+    }
+  }catch(e){ /* silencioso */ }
+}
+setInterval(()=>{ if (pollOn) pollDepth(); }, 500);
+
+// Enviar SP con control anti-redundancia
+const sendDepthSP = debounce(async function(cm){
+  // Evita posts repetidos si el valor no cambió
+  if (lastSentSP !== null && Math.abs(cm - lastSentSP) < 0.5) return;
+  lastSentSP = cm;
+  try{
+    const r = await fetch('/set_depth', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({objetivo_cm: cm})
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+  }catch(err){ console.error('depth', err); }
+}, 160);
+
+// Evento del slider
+sliderProf.addEventListener("input", (e)=>{
+  const objetivo = Number(e.target.value);
+  setProfLabel(objetivo);
+  sendDepthSP(objetivo);
+});
+
+
+    // ================= Servos =================
+    function paintServos(){ /* opcional */ }
+    const sendServos = debounce(async function(){
+      const body = { servo1: Number(sliderServo1.value), servo2: Number(sliderServo2.value) };
+      try{
+        const r = await fetch('/set_servos', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+        if(!r.ok) throw new Error('HTTP '+r.status);
+      }catch(e){ console.error('servos', e); }
+    }, 120);
+
+    if (sliderServo1) sliderServo1.addEventListener('input', ()=>{
+      paintServos(); sendServos(); updateServosUI();   
+    });
+    if (sliderServo2) sliderServo2.addEventListener('input', ()=>{
+      paintServos(); sendServos(); updateServosUI();   
     });
 
-    function updateDebugInfo() {
-      fetch("/debug_info")
-        .then((res) => res.json())
-        .then((data) => {
-          if (fpsCounterEl) fpsCounterEl.textContent = data.fps.toFixed(1);
-          if (radarStatus) radarStatus.textContent = data.radar_status;
-        })
-        .catch(console.error);
+
+    async function preset(cmd){
+      try{
+        const r = await fetch('/control_servo', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({cmd})});
+        if(!r.ok) throw new Error('HTTP '+r.status);
+      }catch(e){ console.error('preset', e); }
     }
+    function Serv0(){   sliderServo1.value=0;   sliderServo2.value=0;   updateServosUI(); sendServos(); preset('bkw'); }
+    function Serv90(){  sliderServo1.value=90;  sliderServo2.value=90;  updateServosUI(); sendServos(); preset('up'); }
+    function Serv180(){ sliderServo1.value=180; sliderServo2.value=180; updateServosUI(); sendServos(); preset('frw'); }
+    function ServDer(){ sliderServo1.value=180;   sliderServo2.value=0; updateServosUI(); sendServos(); preset('der'); }
+    function ServIzq(){ sliderServo1.value=0; sliderServo2.value=180;   updateServosUI(); sendServos(); preset('izq'); }
 
-    setInterval(updateDebugInfo, 1000);
 
-    // Actualizar datos sensores
-    function actualizarSensores() {
-      fetch("/sensor_data")
-        .then((res) => res.json())
-        .then((data) => {
-          if (data) {
-            document.getElementById("sensor-temperatura").textContent = data.temp ?? "0";
-            document.getElementById("sensor-pH").textContent = data.ph ?? "0";
-            document.getElementById("sensor-turbidez").textContent = data.turb ?? "0";
-            document.getElementById("sensor-tds").textContent = data.tds ?? "0";
+    if (serv0) serv0.addEventListener("click", Serv0);
+    if (serv90) serv90.addEventListener("click", Serv90);
+    if (serv180) serv180.addEventListener("click", Serv180);
+    if (servDer) servDer.addEventListener("click", ServDer);
+    if (servIzq) servIzq.addEventListener("click", ServIzq);
 
-            document.getElementById("color-temp").style.backgroundColor = data.temp_color || "gray";
-            document.getElementById("color-ph").style.backgroundColor = data.ph_color || "gray";
-            document.getElementById("color-turb").style.backgroundColor = data.turb_color || "gray";
-            document.getElementById("color-tds").style.backgroundColor = data.tds_color || "gray";
-          }
-        })
-        .catch(() => {});
+    // ================= Botones joystick (estéticos + presets) =================
+    ejeDer.addEventListener("click", ()=>{ ejeIzq.style.background="rgb(1, 202, 202)"; ejeDer.style.background="rgb(0,144,144)"; ServDer(); });
+    ejeIzq.addEventListener("click", ()=>{ ejeIzq.style.background="rgb(0,144,144)"; ejeDer.style.background="rgb(1, 202, 202)"; ServIzq(); });
+    btnForward.addEventListener("click", ()=>{ btnForward.style.background="rgba(33,199,0,.8)"; Serv180();[btnLeft, btnRight, btnBackward, btnNorm, btnNorm2].forEach(b=>b.style.background="rgba(43,255,0,.8)"); });
+    btnBackward.addEventListener("click", ()=>{ btnBackward.style.background="rgba(33,199,0,.8)"; Serv0(); [btnLeft, btnRight, btnForward, btnNorm, btnNorm2].forEach(b=>b.style.background="rgba(43,255,0,.8)");});
+
+   btnRight.addEventListener("click", ()=>{
+  btnRight.style.background = "rgb(33,199,0,.8)";
+  // Si “girar a la derecha” = frenar M1 (izquierdo), usa M1:
+  sliderM1.value = 0;
+  sliderM1.dispatchEvent(new Event('input', { bubbles: true }));
+  [btnLeft, btnForward, btnBackward, btnNorm, btnNorm2].forEach(b=>b.style.background="rgba(43,255,0,.8)");
+});
+
+btnLeft.addEventListener("click", ()=>{
+  btnLeft.style.background = "rgb(33,199,0,.8)";
+  // Si “girar a la izquierda” = frenar M2 (derecho), usa M2:
+  sliderM2.value = 0;
+  sliderM2.dispatchEvent(new Event('input', { bubbles: true }));
+  [btnRight, btnForward, btnBackward, btnNorm, btnNorm2].forEach(b=>b.style.background="rgba(43,255,0,.8)");
+});
+
+
+    btnNorm.addEventListener("click", ()=>{ 
+      [btnLeft, btnRight, btnForward, btnBackward, btnNorm, btnNorm2].forEach(b=>b.style.background="rgba(43,255,0,.8)"); 
+      ejeIzq.style.background="rgb(1,202,202)"; 
+      ejeDer.style.background="rgb(1,202,202)";
+        const v1 = sliderM1 ? parseInt(sliderM1.value) : 0;
+        const v2 = sliderM2 ? parseInt(sliderM2.value) : 0;
+        const vmax = Math.max(v1, v2);
+        if (sliderM1) sliderM1.value = vmax;
+        if (sliderM2) sliderM2.value = vmax;
+        setM1Label(vmax); setM2Label(vmax);
+        if (parseInt(sliderVel.value) !== vmax) {
+          sliderVel.value = vmax; setVelocidadLabel(vmax);
+        }
+        sendMotors();});
+
+    btnNorm2.addEventListener("click", ()=>{ [btnLeft, btnRight, btnForward, btnBackward, btnNorm, btnNorm2].forEach(b=>b.style.background="rgba(43,255,0,.8)"); ejeIzq.style.background="rgb(1,202,202)"; ejeDer.style.background="rgb(1,202,202)"; 
+    const v1 = sliderM1 ? parseInt(sliderM1.value) : 0;
+        const v2 = sliderM2 ? parseInt(sliderM2.value) : 0;
+        const vmax = Math.max(v1, v2);
+        if (sliderM1) sliderM1.value = vmax;
+        if (sliderM2) sliderM2.value = vmax;
+        setM1Label(vmax); setM2Label(vmax);
+        if (parseInt(sliderVel.value) !== vmax) {
+          sliderVel.value = vmax; setVelocidadLabel(vmax);
+        }
+        sendMotors();});
+
+    // ================= Sensores (agua) =================
+    function actualizarSensores(){
+      fetch('/sensor_data').then(r=>r.json()).then(d=>{
+        $('#sensor-temperatura').textContent = d.temp ?? '0';
+        $('#sensor-pH').textContent = d.ph ?? '0';
+        $('#sensor-turbidez').textContent = d.turb ?? '0';
+        $('#sensor-tds').textContent = d.tds ?? '0';
+        $('#color-temp').style.backgroundColor = d.temp_color || 'gray';
+        $('#color-ph').style.backgroundColor = d.ph_color || 'gray';
+        $('#color-turb').style.backgroundColor = d.turb_color || 'gray';
+        $('#color-tds').style.backgroundColor = d.tds_color || 'gray';
+      }).catch(()=>{});
     }
+    setInterval(actualizarSensores, 600);
 
-    setInterval(actualizarSensores, 500);
+    // ================= Selector radial (Modos) =================
+    (function(){
+      const actions = [
+        { id:'normal', label:'Normal', btn:'1', ang:250 },
+        { id:'eje',    label:'Eje',    btn:'2', ang:180 },
+        { id:'libre',  label:'Libre',  btn:'3', ang:110 },
+      ];
+      const root = $('#menuRadial');
+      const list = $('#items');
+      const read = $('#readout');
+      const dot  = $('#dot');
+
+      actions.forEach((a,i)=>{
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.className='btn'; btn.type='button'; btn.textContent=a.btn;
+        li.appendChild(btn); list.appendChild(li);
+        place(li, a.ang);
+        btn.addEventListener('pointerdown', ()=> select(i, true));
+      });
+
+      let selected = 0;
+      select(0,false);
+
+      function select(i, fire){
+        selected = Math.max(0, Math.min(i, actions.length-1));
+        [...list.children].forEach((li,k)=> li.firstElementChild.classList.toggle('active', k===selected));
+        read.textContent = actions[selected].label;
+        moveDot(actions[selected].ang);
+        if(fire) emitChange(actions[selected].id);
+      }
+      function place(el, deg){ el.style.transform = `rotate(${deg}deg) translate(var(--r)) rotate(${-deg}deg)`; }
+      function moveDot(deg){
+        const dotR = `calc(var(--r) + 14px)`;
+        dot.style.transform = `rotate(${deg}deg) translate(${dotR}) rotate(${-deg}deg)`;
+      }
+
+      function emitChange(id){
+        switch(id){
+          case 'normal':
+            controlNormal.classList.remove("controles-block");
+            btnForward.classList.remove("controles-block");
+            controlEje.classList.add("controles-block");
+            controlLibre.classList.add("controles-block");
+            joystick.style.border = "2px solid rgba(255,255,255,0.2)";
+            [serv0,serv90,serv180,servIzq,servDer,velIgual].forEach(b=>b.classList.add("controles-block"));
+            menuControles.classList.add("radial");
+            menuControles.classList.remove("radial-libre");
+            btnNorm.classList.remove("controles-block");
+            btnBackward.classList.remove("controles-block");
+            pidCard.classList.add("controles-block");
+            showMotorLabels(true);
+            showServoLabels(false);
+            break;
+          case 'eje':
+            showMotorLabels(false);
+            controlNormal.classList.add("controles-block");
+            controlEje.classList.remove("controles-block");
+            controlLibre.classList.add("controles-block");
+            btnForward.classList.remove("controles-block");
+            btnNorm.classList.remove("controles-block");
+            btnBackward.classList.remove("controles-block");
+            joystick.style.border = "2px solid rgba(255,255,255,0.2)";
+            [serv0,serv90,serv180,servIzq,servDer,velIgual].forEach(b=>b.classList.add("controles-block"));
+            menuControles.classList.add("radial");
+            menuControles.classList.remove("radial-libre");
+            pidCard.classList.add("controles-block");
+            showMotorLabels(false);
+            showServoLabels(false);
+            break;
+          case 'libre':
+            showMotorLabels(true);
+            controlLibre.classList.remove("controles-block");
+            btnForward.classList.add("controles-block");
+            controlNormal.classList.add("controles-block");
+            controlEje.classList.add("controles-block");
+            joystick.style.border = "none";
+            [serv0,serv90,serv180,servIzq,servDer,velIgual].forEach(b=>b.classList.remove("controles-block"));
+            menuControles.classList.remove("radial");
+            menuControles.classList.add("radial-libre");
+            btnNorm.classList.add("controles-block");
+            btnBackward.classList.add("controles-block");
+            pidCard.classList.remove("controles-block");
+            // Al entrar a Libre, iguala M1/M2 al valor del maestro
+            const masterNow = parseInt(sliderVel.value) || 0;
+            if (sliderM1) sliderM1.value = masterNow;
+            if (sliderM2) sliderM2.value = masterNow;
+            showMotorLabels(true);
+            showServoLabels(true);
+            //setM1Label(masterNow); setM2Label(masterNow);
+            sendMotors();
+            updateServosUI();                  
+            break;
+        }
+      }
+    })();
   </script>
 </body>
 </html>
