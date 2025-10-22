@@ -3,25 +3,25 @@ En este documento encontrarás documentos básicos para moverte dentro de la ras
 
 ACCEDER A LA RASPI
 
-ssh roldac@raspberrypi.local
+-> ssh roldac@raspberrypi.local
 
 ----------------------------------------------------------------------------------------
 
 ACCEDER AL ENTORNO VIRTUAL DONDE SE ENCUENTRAN LOS CODIGOS DEL FRONT END Y BACK END
 
-cd ~/robot_acuatico
-source venv/bin/activate
+-> cd ~/robot_acuatico
+-> source venv/bin/activate
 
 ----------------------------------------------------------------------------------------
 VER LA LISTA DE ARDUINOS CONECTADOS
 
-ls -l /dev/arduino_*
+-> ls -l /dev/arduino_*
 
 ----------------------------------------------------------------------------------------
 
 ACCEDER A LA CONFIGURACION DE ARDUINOS CONECTADOS (DETECCIÓN AUTOMATICA DE LOS ARDUINOS ESCLAVO)
 
-sudo nano /etc/udev/rules.d/99-usb-nombres.rules
+-> sudo nano /etc/udev/rules.d/99-usb-nombres.rules
 
 ----------------------------------------------------------------------------------------
 
@@ -29,10 +29,25 @@ sudo nano /etc/udev/rules.d/99-usb-nombres.rules
 
 SI LA RASPI SE DESCONECTA DE LA LAPTOP PROGRAMADORA, AL VOLVER ACCEDER, PRIMERO ACCEDER AL ENTORNO VIRTUAL, DESPUES INTRODUCIR ESTE COMANDO
 
-ps aux | grep app.py
+-> ps aux | grep app.py
 
+VERÁS ALGO ASI:
+(venv) roldac@raspberrypi:~/robot_acuatico $ ps aux | grep app.py
+roldac      1511  9.3  6.3 1564432 261280 pts/0  SLl+ 20:11   0:04 python app.py
+roldac      1546  0.0  0.0   6384  1600 pts/1    S+   20:12   0:00 grep --color=auto app.py
+
+BUSCA EL NUMERO DESPUES DE 'roldac' EN LA LINEA QUE TENGA 'python app.py'. por ejemplo
+
+"roldac      1511  9.3  6.3 1564432 261280 pts/0  SLl+ 20:11   0:04 python app.py"
+
+EL NÚMERO ES '1511' EN ESTE CASO (siempre va a variar) entonces escribir en la consola
+
+-> kill (número)
+
+'kill 1511' POR EJEMPLO, LO CUAL CERRARÁ EL PROGRAMA DE LA RASP
 
 ----------------------------------------------------------------------------------------
 
 SERVICIO PARA AUTOMATIZAR ARRANQUE DE PROGRAMA
-systemctl is-enabled robot.service
+
+-> systemctl is-enabled robot.service
