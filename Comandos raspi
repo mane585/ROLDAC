@@ -1,0 +1,31 @@
+En este documento encontrarás documentos básicos para moverte dentro de la raspberry, editar archvios y configuraciones
+----------------------------------------------------------------------------------------
+
+ACCEDER A LA RASPI
+
+ssh roldac@raspberrypi.local
+
+----------------------------------------------------------------------------------------
+
+ACCEDER AL ENTORNO VIRTUAL DONDE SE ENCUENTRAN LOS CODIGOS DEL FRONT END Y BACK END
+
+cd ~/robot_acuatico
+source venv/bin/activate
+
+----------------------------------------------------------------------------------------
+VER LA LISTA DE ARDUINOS CONECTADOS
+
+ls -l /dev/arduino_*
+
+----------------------------------------------------------------------------------------
+
+ACCEDER A LA CONFIGURACION DE ARDUINOS CONECTADOS (DETECCIÓN AUTOMATICA DE LOS ARDUINOS ESCLAVO)
+
+sudo nano /etc/udev/rules.d/99-usb-nombres.rules
+
+----------------------------------------------------------------------------------------
+
+
+ps aux | grep app.py
+
+systemctl is-enabled robot.service
