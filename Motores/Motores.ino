@@ -1,4 +1,15 @@
+/*
+  Arduino Nano – 2 ESC por Serial, CON apagado por inactividad (failsafe)
+  Comando:  M,<v1>,<v2>\n   con v1/v2 en 0..100 (%)
 
+  Pines:
+    Izquierdo -> D9
+    Derecho   -> D10
+
+  Notas:
+  - ESCs unidireccionales (1000–2000 us). 0% -> 1000us, 100% -> 2000us.
+  - Ajusta BAUD a lo que uses en la Raspberry (115200 por defecto).
+*/
 
 #include <Servo.h>
 
@@ -103,8 +114,8 @@ void handleLine(char* s) {
   int v2 = clampInt(atoi(v2Str),  0, 100);
 
   // Mapear a microsegundos
-  targetLeftUS  = map(v1, 0, 100, MIN_US, MAX_US);
-  targetRightUS = map(v2, 0, 100, MIN_US, MAX_US);
+  targetLeftUS  = map(v1, 10, 100, 1250, MAX_US);
+  targetRightUS = map(v2, 10, 100, MIN_US, MAX_US);
 
   lastCmdMs = millis();
 
