@@ -25,7 +25,14 @@ sudo nano /etc/udev/rules.d/99-usb-nombres.rules
 
 ----------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------
+
+SI LA RASPI SE DESCONECTA DE LA LAPTOP PROGRAMADORA, AL VOLVER ACCEDER, PRIMERO ACCEDER AL ENTORNO VIRTUAL, DESPUES INTRODUCIR ESTE COMANDO
 
 ps aux | grep app.py
 
+
+----------------------------------------------------------------------------------------
+
+SERVICIO PARA AUTOMATIZAR ARRANQUE DE PROGRAMA
 systemctl is-enabled robot.service
