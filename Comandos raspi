@@ -10,7 +10,7 @@ ACCEDER A LA RASPI
 ACCEDER AL ENTORNO VIRTUAL DONDE SE ENCUENTRAN LOS CODIGOS DEL FRONT END Y BACK END
 
 -> cd ~/robot_acuatico
--> source venv/bin/activate
+ source venv/bin/activate
 
 ----------------------------------------------------------------------------------------
 VER LA LISTA DE ARDUINOS CONECTADOS
