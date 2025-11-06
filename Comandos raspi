@@ -51,3 +51,62 @@ EL NÚMERO ES '1511' EN ESTE CASO (siempre va a variar) entonces escribir en la 
 SERVICIO PARA AUTOMATIZAR ARRANQUE DE PROGRAMA
 
 -> systemctl is-enabled robot.service
+
+ACTIVAR SERVICIO
+
+Para reactivar tu servicio robot.service y que vuelva a iniciar al encender la Raspi:
+
+Paso a paso
+# 1) Ver estado actual
+sudo systemctl status robot.service
+systemctl is-enabled robot.service
+
+# 2) Si estuviera enmascarado (masked), des-enmascara
+sudo systemctl unmask robot.service
+
+# 3) Habilita para que arranque al boot
+sudo systemctl enable robot.service
+
+# 4) Inícialo ahora mismo
+sudo systemctl start robot.service
+
+# 5) Revisa logs (útil si no levanta)
+journalctl -u robot.service -e -n 200
+# o en vivo:
+journalctl -u robot.service -f
+
+(Opcional pero recomendado) Asegurar que arranque cuando el AP ya esté arriba
+
+Edita el unit file si tu app depende del Wi-Fi AP (hostapd/dnsmasq) antes de iniciar:
+
+sudo systemctl edit --full robot.service
+
+
+Ejemplo (ajusta rutas/usuario e interfaz wlan0 si difiere):
+
+[Unit]
+Description=ROLDAC Flask App
+After=network-online.target hostapd.service dnsmasq.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/roldac
+# Espera a que wlan0 tenga IP (AP listo)
+ExecStartPre=/bin/bash -c 'until ip -4 addr show wlan0 | grep -q "inet "; do sleep 1; done'
+# Usa tu venv real y app.py
+ExecStart=/home/pi/roldac/venv/bin/python /home/pi/roldac/app.py
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+
+
+Aplica cambios:
+
+sudo systemctl daemon-reload
+sudo systemctl restart robot.service
+sudo systemctl status robot.service --no-pager -n 100
